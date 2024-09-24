@@ -18,22 +18,22 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        trace!("\t+ App");
-        App {
+        let mut new_app = App {
             status: String::new(),
-            ed_state: edtui::EditorState::new(edtui::Lines::from(
-                "started text 2\nst2arted \n2text 2st\narted text 2",
-            )),
+            ed_state: edtui::EditorState::new(edtui::Lines::from("started text")),
             ed_handler: edtui::EditorEventHandler::default(),
             exiting: false,
-        }
+        };
+        //new_app.ed_state.set_clipboard(edtui::clipboard::InternalClipboard::default());
+        trace!(" + App::new");
+        new_app
     }
 
     pub fn run(
         mut self,
         mut terminal: ratatui::Terminal<CrosstermBackend<std::io::Stdout>>,
     ) -> Result<()> {
-        trace!("\t> App.run()");
+        trace!(" -> App.run()");
         loop {
             // draw
             terminal.draw(|frame| {
@@ -110,9 +110,8 @@ impl Widget for &mut App {
         ])
         .areas(area);
 
-        Paragraph::new("main title here\n1\n22\n33\n444\n555\n6\n7\n888")
+        Paragraph::new("main title here")
             .block(Block::bordered().title("title of Main Title"))
-            .scroll((0, 10))
             .render(title_area, buf);
         let main_block = Block::bordered();
         {
@@ -122,7 +121,6 @@ impl Widget for &mut App {
 
             main_block.render(main_area, buf);
             Paragraph::new("0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF\n<-->")
-                //.block(Block::bordered().title("title of Main Title"))
                 .render(main_left, buf);
             edtui::EditorView::new(&mut self.ed_state).render(main_right, buf);
         }
@@ -135,7 +133,7 @@ impl Widget for &mut App {
 }
 
 //  //  //  //  //  //  //  //
-static POLL_WAIT_TIME: std::time::Duration = std::time::Duration::from_millis(1); //from_secs(0);
+static POLL_WAIT_TIME: std::time::Duration = std::time::Duration::from_millis(8); //from_secs(0);
 fn collect_events() -> Result<Vec<xEvent::Event>> {
     let mut result = Vec::new();
     while xEvent::poll(POLL_WAIT_TIME)? {

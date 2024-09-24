@@ -9,7 +9,6 @@ use app::App;
 //  //  //  //  //  //  //  //
 fn main() -> Result<()> {
     log_init();
-    debug!("STARTED ----->");
 
     let terminal = ratatui::init();
     let result = App::new().run(terminal);
@@ -19,9 +18,7 @@ fn main() -> Result<()> {
         error!("{}", e);
     }
 
-    debug!("<-----");
-    trace!("############");
-    trace!(" ");
+    trace!("############\n<-----\n.\n ");
     result
 }
 
@@ -31,21 +28,15 @@ fn log_init() {
         .set_file_mode("/tmp/rust_debug.log").expect("unable to set file mode of logger")
         .set_level(raalog::LevelFilter::Trace);
 
+    trace!("\n.\n----->\n############");
     set_panic_hook();
-    trace!(" ");
-    trace!("############");
 }
 
 //  //  //  //  //  //  //  //
 fn set_panic_hook() {
     let hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
-        trace!("<-----");
-        for line in info.to_string().lines() {
-            error!("{}", line);
-        }
-        error!("############");
-        error!(" ");
+        error!("############\nFATAL!\n{}\n<-----\n.\n ", info);
         hook(info);
     }));
 }
