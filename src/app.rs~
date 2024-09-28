@@ -18,21 +18,17 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let mut new_app = App {
+        let new_app = App {
             status: String::new(),
             ed_state: edtui::EditorState::new(edtui::Lines::from("started text")),
             ed_handler: edtui::EditorEventHandler::default(),
             exiting: false,
         };
-        //new_app.ed_state.set_clipboard(edtui::clipboard::InternalClipboard::default());
         trace!(" + App::new");
         new_app
     }
 
-    pub fn run(
-        mut self,
-        mut terminal: ratatui::Terminal<CrosstermBackend<std::io::Stdout>>,
-    ) -> Result<()> {
+    pub fn run(mut self, terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
         trace!(" -> App.run()");
         loop {
             // draw
@@ -43,7 +39,6 @@ impl App {
             // input
             let events = collect_events()?;
             if events.len() > 0 {
-                trace!("event number: {}", events.len());
                 self.app_input_handler(&events)?;
                 self.other_input_handlers(&events)?;
             }
