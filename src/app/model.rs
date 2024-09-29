@@ -1,6 +1,8 @@
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
+use super::game_cell_state::{GameCellState,GetGameCellState};
+
 //  //  //  //  //  //  //  //
 pub struct AppModel {
     pub(in super) ed_state: edtui::EditorState,
@@ -29,5 +31,11 @@ impl AppModel {
 
     pub fn is_exiting(&self) -> bool {
         self.state == AppModelState::Exiting
+    }
+}
+
+impl GetGameCellState for AppModel {
+    fn get_game_cell_state(&self, _i: u16, _j: u16) -> GameCellState {
+        GameCellState::Empty
     }
 }

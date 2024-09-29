@@ -8,20 +8,26 @@ use ratatui::widgets::{Block, Paragraph};
 use Constraint::*;
 use Direction::*;
 
-use super::tui_view::*;
+mod tui_view;
+use tui_view::*;
+
+mod game_view;
+use super::game_cell_state::GetGameCellState;
+use game_view::GameView;
 
 //  //  //  //  //  //  //  //
 pub fn view(model: &mut Model, frame: &mut Frame) {
-    sub_views_with_layouts(
-        frame,
-        frame.area(),
-        Vertical,
-        [
-            (&mut TitleView(), Length(5)),
-            (&mut PlaygoundView(), Min(35)),
-            (&mut EditorView(&mut model.ed_state), Min(4)),
-        ],
-    );
+    let l = Layout::vertical([Length(5), Min(35), Min(4)]).split(frame.area());
+    {
+        TitleView().view(frame, l[0]);
+    }
+    {
+        PlaygroundView(model).view(frame, l[1]);
+    }
+    {
+        // fight with this MUT
+        EditorView(&mut model.ed_state).view(frame, l[2]);
+    }
 }
 //  //  //  //  //  //  //  //
 struct TitleView();
@@ -41,31 +47,30 @@ impl TuiView for EditorView<'_> {
     }
 }
 
-struct PlaygoundView();
-impl TuiView for PlaygoundView {
+struct PlaygroundView<'a>(&'a dyn GetGameCellState);
+impl TuiView for PlaygroundView<'_> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
-        let main_block = Block::bordered();
-        let inner_area = main_block.inner(area);
-
-        frame.render_widget(main_block, area);
+        //let main_block = Block::into//bordered();
+        let inner_area = area; //main_block.inner(area);
+                               //frame.render_widget(main_block, area);
 
         sub_views_with_layouts(
             frame,
             inner_area,
             Horizontal,
             [
-                (&mut GameLeftView(), Length(3)),
-                (&mut GameRightView(), Length(67)),
+                (&mut PlaygoundLeftView(), Length(3)),
+                (&mut PlaygoundRightView(self.0), Length(67)),
             ],
         );
     }
 }
 
-struct GameLeftView();
-impl TuiView for GameLeftView {
+struct PlaygoundLeftView();
+impl TuiView for PlaygoundLeftView {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         let mut s = String::from("\n\n");
-        for i in 0..=15 {
+        for i in 0x0..0x10 {
             s += &format!("[{:X}]\n\n", i);
         }
         let text = Paragraph::new(s);
@@ -73,37 +78,29 @@ impl TuiView for GameLeftView {
     }
 }
 
-struct GameRightView();
-impl TuiView for GameRightView {
+struct PlaygoundRightView<'a>(&'a dyn GetGameCellState);
+impl TuiView for PlaygoundRightView<'_> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         sub_views_with_layouts(
             frame,
             area,
             Vertical,
             [
-                (&mut GameRightTopView(), Length(1)),
-                (&mut GameMainView(), Length(33)),
+                (&mut PlaygoundRightTopView(), Length(1)),
+                (&mut GameView(self.0), Length(33)),
             ],
         );
     }
 }
 
-struct GameRightTopView();
-impl TuiView for GameRightTopView {
+struct PlaygoundRightTopView();
+impl TuiView for PlaygoundRightTopView {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         let mut s = String::from(" ");
-        for i in 0..=15 {
+        for i in 0x0..0x10 {
             s += &format!(" [{:X}]", i);
         }
         let text = Paragraph::new(s);
         frame.render_widget(text, area);
-    }
-}
-
-struct GameMainView();
-impl TuiView for GameMainView {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
-        let block = Block::bordered();
-        frame.render_widget(block, area);
     }
 }

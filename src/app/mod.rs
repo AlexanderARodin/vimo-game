@@ -6,9 +6,7 @@ use raalog::{debug, error, info, trace, warn};
 mod action;
 use action::Action;
 
-mod tui_view;
-
-//mod app_component;
+mod game_cell_state;
 
 mod model;
 use model::AppModel as Model;
