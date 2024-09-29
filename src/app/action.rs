@@ -4,7 +4,8 @@ use ratatui::crossterm::event as xEvent;
 pub enum Action {
     Noop,
     Quit,
+    //ProcessRawEventList(Vec<xEvent::Event>),
     TranslateRawEvent(xEvent::Event),
     HandleByEditor(xEvent::Event),
-    Error(String),
+    //Error(String),
 }

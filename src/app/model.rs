@@ -10,7 +10,7 @@ pub struct AppModel {
 
 #[derive(PartialEq)]
 pub enum AppModelState {
-    EditorFocused,
+    //EditorFocused,
     OffFocused,
     Exiting,
 }

@@ -1,49 +1,109 @@
+#[allow(unused_imports)]
+use raalog::{debug, error, info, trace, warn};
+
 use super::model::AppModel as Model;
 
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Paragraph, Wrap};
+use ratatui::widgets::{Block, Paragraph};
+use Constraint::*;
+use Direction::*;
+
+use super::tui_view::*;
 
 //  //  //  //  //  //  //  //
-// edtui requires mut state for new()
 pub fn view(model: &mut Model, frame: &mut Frame) {
-    let area = frame.area();
-    // layout
-    let [title_area, main_area, editor_area] = Layout::vertical([
-        Constraint::Length(10),
-        Constraint::Min(19),
-        Constraint::Min(2),
-    ])
-    .areas(area);
-
-    view_title(frame, &title_area);
-    view_main(frame, &main_area);
-    view_editor(frame, &editor_area, &mut model.ed_state);
+    sub_views_with_layouts(
+        frame,
+        frame.area(),
+        Vertical,
+        [
+            (&mut TitleView(), Length(5)),
+            (&mut PlaygoundView(), Min(35)),
+            (&mut EditorView(&mut model.ed_state), Min(4)),
+        ],
+    );
 }
-
 //  //  //  //  //  //  //  //
-fn view_title(frame: &mut Frame, area: &Rect) {
-    let title =
-        Paragraph::new("main title here").block(Block::bordered().title("title of Main Title"));
-    frame.render_widget(title, *area);
+struct TitleView();
+impl TuiView for TitleView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let title =
+            Paragraph::new("main title here").block(Block::bordered().title("title of Main Title"));
+        frame.render_widget(title, area);
+    }
 }
 
-fn view_editor(frame: &mut Frame, area: &Rect, ed_state: &mut edtui::EditorState) {
-    let editor = edtui::EditorView::new(ed_state);
-    frame.render_widget(editor, *area);
+struct EditorView<'a>(&'a mut edtui::EditorState);
+impl TuiView for EditorView<'_> {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let editor = edtui::EditorView::new(&mut self.0);
+        frame.render_widget(editor, area);
+    }
 }
 
-fn view_main(frame: &mut Frame, area: &Rect) {
-    let main_block = Block::bordered();
-    let main_inner = main_block.inner(*area);
-    frame.render_widget(main_block, *area);
+struct PlaygoundView();
+impl TuiView for PlaygoundView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let main_block = Block::bordered();
+        let inner_area = main_block.inner(area);
 
-    let [main_left, main_right] =
-        Layout::horizontal([Constraint::Length(3), Constraint::Min(16)]).areas(main_inner);
-    view_main_left(frame, &main_left);
-    //frame.render_widget(main_right_ed, main_right);
+        frame.render_widget(main_block, area);
+
+        sub_views_with_layouts(
+            frame,
+            inner_area,
+            Horizontal,
+            [
+                (&mut GameLeftView(), Length(3)),
+                (&mut GameRightView(), Length(67)),
+            ],
+        );
+    }
 }
 
-fn view_main_left(frame: &mut Frame, area: &Rect) {
-    let main_left_text = Paragraph::new("0\n1\n2\n3\n4\n5\n6\n7\n8\n9\nA\nB\nC\nD\nE\nF\n<-->");
-    frame.render_widget(main_left_text, *area);
+struct GameLeftView();
+impl TuiView for GameLeftView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let mut s = String::from("\n\n");
+        for i in 0..=15 {
+            s += &format!("[{:X}]\n\n", i);
+        }
+        let text = Paragraph::new(s);
+        frame.render_widget(text, area);
+    }
+}
+
+struct GameRightView();
+impl TuiView for GameRightView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        sub_views_with_layouts(
+            frame,
+            area,
+            Vertical,
+            [
+                (&mut GameRightTopView(), Length(1)),
+                (&mut GameMainView(), Length(33)),
+            ],
+        );
+    }
+}
+
+struct GameRightTopView();
+impl TuiView for GameRightTopView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let mut s = String::from(" ");
+        for i in 0..=15 {
+            s += &format!(" [{:X}]", i);
+        }
+        let text = Paragraph::new(s);
+        frame.render_widget(text, area);
+    }
+}
+
+struct GameMainView();
+impl TuiView for GameMainView {
+    fn view(&mut self, frame: &mut Frame, area: Rect) {
+        let block = Block::bordered();
+        frame.render_widget(block, area);
+    }
 }
