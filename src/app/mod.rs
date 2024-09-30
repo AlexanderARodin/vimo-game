@@ -9,8 +9,6 @@ use action::Action;
 mod app_model;
 use app_model::AppModel;
 
-mod game_model;
-
 mod updater;
 use updater::update;
 mod viewer;

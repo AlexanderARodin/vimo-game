@@ -1,15 +1,28 @@
 [package]
-name = "vi-move-game"
+name = "vimo-game"
 version = "0.1.0"
+authors=["AlexanderARodin"]
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.88"
-
-raalog = { path = "../raalog" }
-# raalog = { git = "https://github.com/AlexanderARodin/raalog.git", branch = "main" }
+anyhow.workspace = true
+raalog.workspace = true
 
 ratatui = "0.28.1"
 edtui = "0.7.2"
+
+game_model = { path = "./game_model" }
+
+
+[workspace]
+resolver = "2"
+members = [
+	"game_model",
+]
+
+[workspace.dependencies]
+anyhow = "1.0.88"
+raalog = { path = "../raalog" }
+# raalog = { git = "https://github.com/AlexanderARodin/raalog.git", branch = "main" }
 
 mlua = { version = "0.9.9", features = ["lua54", "vendored"] }

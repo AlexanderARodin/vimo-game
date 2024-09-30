@@ -14,7 +14,7 @@ use tui_view::*;
 mod game_view;
 use game_view::GameView;
 
-use super::game_model::GetGameCellState;
+use game_model::GetGameCellState;
 
 //  //  //  //  //  //  //  //
 pub fn view(model: &mut AppModel, frame: &mut Frame) {
