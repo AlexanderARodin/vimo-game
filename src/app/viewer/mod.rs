@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
-use super::model::AppModel as Model;
+use super::app_model::AppModel;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph};
@@ -12,17 +12,18 @@ mod tui_view;
 use tui_view::*;
 
 mod game_view;
-use super::game_cell_state::GetGameCellState;
 use game_view::GameView;
 
+use super::game_model::GetGameCellState;
+
 //  //  //  //  //  //  //  //
-pub fn view(model: &mut Model, frame: &mut Frame) {
+pub fn view(model: &mut AppModel, frame: &mut Frame) {
     let l = Layout::vertical([Length(5), Min(35), Min(4)]).split(frame.area());
     {
         TitleView().view(frame, l[0]);
     }
     {
-        PlaygroundView(model).view(frame, l[1]);
+        PlaygroundView(&model.game).view(frame, l[1]);
     }
     {
         // fight with this MUT

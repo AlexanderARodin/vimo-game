@@ -7,7 +7,7 @@ use raalog::{debug, error, info, trace, warn};
 use ratatui::prelude::*;
 use ratatui::widgets::Block;
 
-use super::super::game_cell_state::{
+use super::super::game_model::{
     GameCellState::{self, *},
     GetGameCellState,
 };

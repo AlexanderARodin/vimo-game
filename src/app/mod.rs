@@ -6,10 +6,11 @@ use raalog::{debug, error, info, trace, warn};
 mod action;
 use action::Action;
 
-mod game_cell_state;
+mod app_model;
+use app_model::AppModel;
 
-mod model;
-use model::AppModel as Model;
+mod game_model;
+
 mod updater;
 use updater::update;
 mod viewer;
@@ -18,10 +19,9 @@ use ratatui::crossterm::event as xEvent;
 use ratatui::prelude::*;
 
 //  //  //  //  //  //  //  //
-
 pub fn run(terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
     trace!(" -> app::run()");
-    let mut model = Model::new();
+    let mut model = AppModel::new()?;
 
     while !model.is_exiting() {
         // DRAW
