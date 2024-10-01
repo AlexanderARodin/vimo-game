@@ -7,7 +7,9 @@ use game_model::GameModel;
 
 //  //  //  //  //  //  //  //
 pub struct AppModel {
-    pub(super) game: GameModel,
+    pub(crate) start_time: std::time::SystemTime,
+    pub(crate) counter: i64,
+    pub(super) game: Option<GameModel>,
     pub(super) ed_state: edtui::EditorState,
     pub(super) ed_handler: edtui::EditorEventHandler,
     pub(super) state: AppModelState,
@@ -23,8 +25,10 @@ pub enum AppModelState {
 impl AppModel {
     pub fn new() -> Result<Self> {
         let new_model = Self {
-            game: GameModel::new()?,
-            ed_state: edtui::EditorState::new(edtui::Lines::from("started text.\n\nline 3\nFIN")),
+            start_time: std::time::SystemTime::now(),
+            counter: -1,
+            game: None,
+            ed_state: edtui::EditorState::new(edtui::Lines::from(START_CODE)),
             ed_handler: edtui::EditorEventHandler::default(),
             state: AppModelState::OffFocused,
         };
@@ -37,3 +41,14 @@ impl AppModel {
         self.state == AppModelState::Exiting
     }
 }
+
+static START_CODE: &str = r#"-- demo startup dummy code on Lua
+-- print("hell no word!!1")
+function update(time)
+    -- print("time:", time)
+    return {
+        player = {x=3,y=2},
+        GameOver,
+    }
+end
+"#;

@@ -14,7 +14,7 @@ use tui_view::*;
 mod game_view;
 use game_view::GameView;
 
-use game_model::GetGameCellState;
+use game_model::GameModelInterface;
 
 //  //  //  //  //  //  //  //
 pub fn view(model: &mut AppModel, frame: &mut Frame) {
@@ -23,7 +23,11 @@ pub fn view(model: &mut AppModel, frame: &mut Frame) {
         TitleView().view(frame, l[0]);
     }
     {
-        PlaygroundView(&model.game).view(frame, l[1]);
+        if let Some(game) = &model.game {
+            PlaygroundView(Some(game)).view(frame, l[1]);
+        }else{
+            PlaygroundView(None).view(frame, l[1]);
+        }
     }
     {
         // fight with this MUT
@@ -48,7 +52,7 @@ impl TuiView for EditorView<'_> {
     }
 }
 
-struct PlaygroundView<'a>(&'a dyn GetGameCellState);
+struct PlaygroundView<'a>(Option<&'a dyn GameModelInterface>);
 impl TuiView for PlaygroundView<'_> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         //let main_block = Block::into//bordered();
@@ -79,7 +83,7 @@ impl TuiView for PlaygoundLeftView {
     }
 }
 
-struct PlaygoundRightView<'a>(&'a dyn GetGameCellState);
+struct PlaygoundRightView<'a>(Option<&'a dyn GameModelInterface>);
 impl TuiView for PlaygoundRightView<'_> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         sub_views_with_layouts(

@@ -8,13 +8,13 @@ use ratatui::prelude::*;
 use ratatui::widgets::Block;
 
 use game_model::{
-    GameCellState::{self, *},
-    GetGameCellState,
+    CellState::{self, *},
+    GameModelInterface,
 };
 use super::tui_view::*;
 
 //  //  //  //  //  //  //  //
-pub struct GameView<'a>(pub &'a dyn GetGameCellState);
+pub struct GameView<'a>(pub Option<&'a dyn GameModelInterface>);
 impl TuiView for GameView<'_> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::bordered();
@@ -22,11 +22,13 @@ impl TuiView for GameView<'_> {
 
         frame.render_widget(block, area);
 
-        for i in 0x0..0x10 {
-            for j in 0x0..0x10 {
-                if let Some(rc) = ij2rect(&inner_area, i, j) {
-                    let cell_state = self.0.get_game_cell_state(i, j);
-                    frame.render_widget(GameCellWG(cell_state), rc);
+        if let Some(game) = self.0 {
+            for i in 0x0..0x10 {
+                for j in 0x0..0x10 {
+                    if let Some(rc) = ij2rect(&inner_area, i, j) {
+                        let cell_state = game.cell_state(i, j);
+                        frame.render_widget(GameCellWG(cell_state), rc);
+                    }
                 }
             }
         }
@@ -34,7 +36,7 @@ impl TuiView for GameView<'_> {
 }
 
 //  //  //  //  //  //  //  //
-struct GameCellWG(GameCellState);
+struct GameCellWG(CellState);
 impl Widget for GameCellWG {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let left = Position::new(area.x, area.y);
@@ -47,10 +49,25 @@ impl Widget for GameCellWG {
                 buf[left].set_char(' ').set_bg(ebg);
                 buf[right].set_char(' ').set_bg(ebg);
             }
-            Test => {
-                buf[center].set_char('+').set_bg(ebg);
-                buf[left].set_char('>').set_bg(ebg);
-                buf[right].set_char('<').set_bg(ebg);
+            Player => {
+                buf[center].set_char('*').set_bg(ebg).set_fg(Color::Green);
+                buf[left].set_char('[').set_bg(ebg);
+                buf[right].set_char(']').set_bg(ebg);
+            }
+            Target => {
+                buf[center].set_char('#').set_bg(Color::Black).set_fg(Color::Red);
+                buf[left].set_char(' ').set_bg(Color::Black);
+                buf[right].set_char(' ').set_bg(Color::Black);
+            }
+            Obstacle => {
+                buf[center].set_char(' ').set_bg(Color::Black);
+                buf[left].set_char(' ').set_bg(Color::Black);
+                buf[right].set_char(' ').set_bg(Color::Black);
+            }
+            _ => {
+                buf[center].set_char('?').set_bg(ebg);
+                buf[left].set_char('?').set_bg(ebg);
+                buf[right].set_char('?').set_bg(ebg);
             }
         }
     }

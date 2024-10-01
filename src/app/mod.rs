@@ -36,6 +36,12 @@ pub fn run(terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
                 current_action = update(&mut model, &current_action)?;
             }
         }
+        {
+            let mut current_action = Action::UpdateTimer;
+            while current_action != Action::Noop {
+                current_action = update(&mut model, &current_action)?;
+            }
+        }
     }
     trace!("normal exit");
     Ok(())
@@ -72,7 +78,7 @@ fn check_terminate_sequence(events: &Vec<xEvent::Event>) -> Result<()> {
 }
 
 //  //  //  //  //  //  //  //
-static POLL_WAIT_TIME: std::time::Duration = std::time::Duration::from_millis(8); //from_secs(0);
+static POLL_WAIT_TIME: std::time::Duration = std::time::Duration::from_millis(16); //from_secs(0);
 fn collect_events() -> Result<Vec<xEvent::Event>> {
     let mut result = Vec::new();
     while xEvent::poll(POLL_WAIT_TIME)? {
