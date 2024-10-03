@@ -8,7 +8,6 @@ use game_model::GameModelInterface;
 
 use ratatui::crossterm::event as xEvent;
 
-
 static TICK: std::time::Duration = std::time::Duration::from_millis(250);
 
 //  //  //  //  //  //  //  //
@@ -24,22 +23,7 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
             Ok(Action::Noop)
         }
         (_, Action::LoadCode) => {
-            model.ed_state.mode = edtui::EditorMode::Normal;
-            let code: String = model.ed_state.lines.clone().into();
-            match game_model::GameModel::new(&code) {
-                Ok(new_game) => {
-                    model.game = Some(new_game);
-                    model.counter = -1;
-                    info!("Lua restarted with new code");
-                    Ok(Action::GameUpdate(-1))
-                }
-                Err(e) => {
-                    model.game = None;
-                    warn!("Lua code has errors (see below). Game has been reseted.");
-                    warn!("{}", e.to_string());
-                    Ok(Action::Noop)
-                }
-            }
+            return load_code(model);
         }
         (_, Action::GameUpdate(t)) => {
             if let Some(game) = &mut model.game {
@@ -48,20 +32,7 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
             Ok(Action::Noop)
         }
         (_, Action::UpdateTimer) => {
-            let prev = model.start_time;
-            match prev.elapsed() {
-                Ok(delta) => {
-                    if delta >= TICK {
-                        model.start_time = std::time::SystemTime::now();
-                        model.counter += 1;
-                        return Ok(Action::GameUpdate(model.counter));
-                    }
-                }
-                Err(_) => {
-                    model.counter = -1;
-                }
-            }
-            Ok(Action::Noop)
+            return update_timer(model);
         }
         _ => {
             trace!("unprocessed Message:\n{:?}", act);
@@ -70,13 +41,13 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
     }
 }
 
-
 //  //  //  //  //  //  //  //
+#[inline(always)]
 fn translate_event(model: &AppModel, event: &xEvent::Event) -> Result<Action> {
     if let xEvent::Event::Key(key) = event {
         if key.modifiers.contains(xEvent::KeyModifiers::CONTROL) {
             if key.code == xEvent::KeyCode::Char('y') {
-            // TODO: <C-CR> doesn't work
+                // TODO: <C-CR> doesn't work
                 return Ok(Action::LoadCode);
             }
         }
@@ -89,4 +60,44 @@ fn translate_event(model: &AppModel, event: &xEvent::Event) -> Result<Action> {
         }
     }
     Ok(Action::HandleByEditor(event.clone()))
+}
+
+//  //  //  //  //  //  //  //
+#[inline(always)]
+fn load_code(model: &mut AppModel) -> Result<Action> {
+    model.ed_state.mode = edtui::EditorMode::Normal;
+    let code: String = model.ed_state.lines.clone().into();
+    match game_model::GameModel::new(&code) {
+        Ok(new_game) => {
+            model.game = Some(new_game);
+            model.counter = -1;
+            info!("Lua restarted with new code");
+            Ok(Action::GameUpdate(-1))
+        }
+        Err(e) => {
+            model.game = None;
+            warn!("Lua code has errors (see below). Game has been reseted.");
+            warn!("{}", e.to_string());
+            Ok(Action::Noop)
+        }
+    }
+}
+
+//  //  //  //  //  //  //  //
+#[inline(always)]
+fn update_timer(model: &mut AppModel) -> Result<Action> {
+    let prev = model.start_time;
+    match prev.elapsed() {
+        Ok(delta) => {
+            if delta >= TICK {
+                model.start_time = std::time::SystemTime::now();
+                model.counter += 1;
+                return Ok(Action::GameUpdate(model.counter));
+            }
+        }
+        Err(_) => {
+            model.counter = -1;
+        }
+    }
+    Ok(Action::Noop)
 }

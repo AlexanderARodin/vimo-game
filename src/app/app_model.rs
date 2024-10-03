@@ -47,7 +47,13 @@ static START_CODE: &str = r#"-- demo startup dummy code on Lua
 function update(time)
     -- print("time:", time)
     return {
-        player = {x=3,y=2},
+        player = {3,2},
+        target = {13,5},
+        obstacles = {
+            {9,9},
+            {8,9},
+            {9,9},
+        },
         GameOver,
     }
 end

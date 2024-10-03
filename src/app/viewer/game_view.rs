@@ -64,11 +64,11 @@ impl Widget for GameCellWG {
                 buf[left].set_char(' ').set_bg(Color::Black);
                 buf[right].set_char(' ').set_bg(Color::Black);
             }
-            _ => {
-                buf[center].set_char('?').set_bg(ebg);
-                buf[left].set_char('?').set_bg(ebg);
-                buf[right].set_char('?').set_bg(ebg);
-            }
+            //_ => {
+            //    buf[center].set_char('?').set_bg(ebg);
+            //    buf[left].set_char('?').set_bg(ebg);
+            //    buf[right].set_char('?').set_bg(ebg);
+            //}
         }
     }
 }

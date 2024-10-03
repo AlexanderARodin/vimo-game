@@ -31,19 +31,19 @@ pub fn run(terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
         check_terminate_sequence(&raw_inputs)?;
         //      updating loop
         for event in raw_inputs {
-            let mut current_action = Action::TranslateRawEvent(event);
-            while current_action != Action::Noop {
-                current_action = update(&mut model, &current_action)?;
-            }
+            invoke_update_loop(Action::TranslateRawEvent(event), &mut model)?;
         }
-        {
-            let mut current_action = Action::UpdateTimer;
-            while current_action != Action::Noop {
-                current_action = update(&mut model, &current_action)?;
-            }
-        }
+        invoke_update_loop(Action::UpdateTimer, &mut model)?;
     }
     trace!("normal exit");
+    Ok(())
+}
+
+fn invoke_update_loop(first_action: Action, model: &mut AppModel) -> Result<()> {
+    let mut current_action = first_action;
+    while current_action != Action::Noop {
+        current_action = update(model, &current_action)?;
+    }
     Ok(())
 }
 

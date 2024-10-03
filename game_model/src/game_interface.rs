@@ -1,5 +1,4 @@
 use anyhow::Result;
-//type Result<T> = std::io::Result<T>;
 
 #[allow(dead_code)]
 pub enum CellState {
@@ -14,18 +13,6 @@ pub enum GameCommand {
     Down,
     Left,
     Right,
-}
-
-pub enum GameState {
-    Undef,
-    Running(GameObjects),
-    GameOver(String),
-}
-
-pub struct GameObjects {
-    pub(super) player: Option<(u16,u16)>,
-    pub(super) target: Option<(u16,u16)>,
-    pub(super) obstacles: Vec<(u16,u16)>,
 }
 
 pub trait GameModelInterface {
