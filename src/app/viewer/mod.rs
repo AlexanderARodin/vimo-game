@@ -18,7 +18,8 @@ use game_model::GameModelInterface;
 
 //  //  //  //  //  //  //  //
 pub fn view(model: &mut AppModel, frame: &mut Frame) {
-    let l = Layout::vertical([Length(5), Min(35), Min(4)]).split(frame.area());
+    let area = frame.area();
+    let l = Layout::vertical([Length(5), Min(35), Min(4)]).split(area);
     {
         TitleView().view(frame, l[0]);
     }
@@ -32,6 +33,19 @@ pub fn view(model: &mut AppModel, frame: &mut Frame) {
     {
         // fight with this MUT
         EditorView(&mut model.ed_state).view(frame, l[2]);
+    }
+
+    if model.is_popup {
+        let popup_area = Rect {
+            x: area.width / 6,
+            y: area.height / 6,
+            width: area.width * 4 / 6,
+            height: area.height * 4 / 6,
+        };
+        frame.render_widget(ratatui::widgets::Clear::default(), popup_area);
+        let popup_block = Block::bordered()
+            .title("GameModel Lua Editor");
+        frame.render_widget(popup_block, popup_area);
     }
 }
 //  //  //  //  //  //  //  //

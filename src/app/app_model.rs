@@ -13,6 +13,7 @@ pub struct AppModel {
     pub(super) ed_state: edtui::EditorState,
     pub(super) ed_handler: edtui::EditorEventHandler,
     pub(super) state: AppModelState,
+    pub(crate) is_popup: bool,
 }
 
 #[derive(PartialEq)]
@@ -31,6 +32,7 @@ impl AppModel {
             ed_state: edtui::EditorState::new(edtui::Lines::from(START_CODE)),
             ed_handler: edtui::EditorEventHandler::default(),
             state: AppModelState::OffFocused,
+            is_popup: false,
         };
 
         trace!(" + AppModel::new()");

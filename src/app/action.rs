@@ -4,11 +4,11 @@ use ratatui::crossterm::event as xEvent;
 pub enum Action {
     Noop,
     Quit,
-    //ProcessRawEventList(Vec<xEvent::Event>),
     TranslateRawEvent(xEvent::Event),
     UpdateTimer,
     LoadCode,
     GameUpdate(i64),
     HandleByEditor(xEvent::Event),
+    PopupLuaEditor,
     //Error(String),
 }

@@ -2,18 +2,23 @@ use anyhow::Result;
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
-use ratatui::crossterm::event as xEvent;
-
 use super::action::Action;
 use super::app_model::{AppModel, AppModelState};
 use game_model::GameModelInterface;
+
+mod key_binder;
 
 //  //  //  //  //  //  //  //
 static TICK: std::time::Duration = std::time::Duration::from_millis(250);
 
 pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
     match act {
-        Action::TranslateRawEvent(ev) => return translate_event(&model, ev),
+        Action::TranslateRawEvent(ev) => {
+            return key_binder::translate_event(
+                ev,
+                model.ed_state.mode == edtui::EditorMode::Normal,
+            )
+        }
         Action::HandleByEditor(ev) => {
             model.ed_handler.on_event(ev.clone(), &mut model.ed_state);
             Ok(Action::Noop)
@@ -38,32 +43,15 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
         Action::UpdateTimer => {
             return update_timer(model);
         }
+        Action::PopupLuaEditor => {
+            model.is_popup = !model.is_popup;
+            Ok(Action::Noop)
+        }
         _ => {
             debug!("unprocessed Message:\n{:?}", act);
             Ok(Action::Noop)
         }
     }
-}
-
-//  //  //  //  //  //  //  //
-#[inline(always)]
-fn translate_event(model: &AppModel, event: &xEvent::Event) -> Result<Action> {
-    if let xEvent::Event::Key(key) = event {
-        if key.modifiers.contains(xEvent::KeyModifiers::CONTROL) {
-            if key.code == xEvent::KeyCode::Char('y') {
-                // TODO: <C-CR> doesn't work
-                return Ok(Action::LoadCode);
-            }
-        }
-    }
-    if model.ed_state.mode == edtui::EditorMode::Normal {
-        if let xEvent::Event::Key(key) = event {
-            if key.code == xEvent::KeyCode::Char('q') {
-                return Ok(Action::Quit);
-            }
-        }
-    }
-    Ok(Action::HandleByEditor(event.clone()))
 }
 
 //  //  //  //  //  //  //  //
