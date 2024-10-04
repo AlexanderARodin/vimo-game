@@ -2,40 +2,44 @@ use anyhow::Result;
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
+use ratatui::crossterm::event as xEvent;
+
 use super::action::Action;
 use super::app_model::{AppModel, AppModelState};
 use game_model::GameModelInterface;
 
-use ratatui::crossterm::event as xEvent;
-
+//  //  //  //  //  //  //  //
 static TICK: std::time::Duration = std::time::Duration::from_millis(250);
 
-//  //  //  //  //  //  //  //
 pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
-    match (&model.state, act) {
-        (_, Action::TranslateRawEvent(ev)) => translate_event(&model, ev),
-        (_, Action::HandleByEditor(ev)) => {
+    match act {
+        Action::TranslateRawEvent(ev) => return translate_event(&model, ev),
+        Action::HandleByEditor(ev) => {
             model.ed_handler.on_event(ev.clone(), &mut model.ed_state);
             Ok(Action::Noop)
         }
-        (_, Action::Quit) => {
+        Action::Quit => {
             model.state = AppModelState::Exiting;
             Ok(Action::Noop)
         }
-        (_, Action::LoadCode) => {
+        Action::LoadCode => {
             return load_code(model);
         }
-        (_, Action::GameUpdate(t)) => {
+        Action::GameUpdate(t) => {
             if let Some(game) = &mut model.game {
-                game.update(*t);
+                if let Err(e) = game.update(*t) {
+                    model.game = None;
+                    warn!("Lua code has errors (see below). Game has been reseted.");
+                    warn!("{}", e.to_string());
+                }
             }
             Ok(Action::Noop)
         }
-        (_, Action::UpdateTimer) => {
+        Action::UpdateTimer => {
             return update_timer(model);
         }
         _ => {
-            trace!("unprocessed Message:\n{:?}", act);
+            debug!("unprocessed Message:\n{:?}", act);
             Ok(Action::Noop)
         }
     }

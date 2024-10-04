@@ -4,12 +4,13 @@ use anyhow::Result;
 use raalog::{debug, error, info, trace, warn};
 
 use crate::lua_connector;
-use crate::GameCommand;
 use crate::CellState;
+use crate::GameCommand;
 use crate::GameModelInterface;
 
 //  //  //  //  //  //  //  //
 mod impl_update;
+mod impl_action;
 
 #[derive(PartialEq)]
 pub enum GameState {
@@ -20,9 +21,9 @@ pub enum GameState {
 
 #[derive(PartialEq)]
 pub struct GameObjects {
-    pub(super) player: Option<(u16,u16)>,
-    pub(super) target: Option<(u16,u16)>,
-    pub(super) obstacles: Vec<(u16,u16)>,
+    pub(super) player: Option<(u16, u16)>,
+    pub(super) target: Option<(u16, u16)>,
+    pub(super) obstacles: Vec<(u16, u16)>,
 }
 
 pub struct GameModel {
@@ -52,10 +53,10 @@ impl GameModelInterface for GameModel {
     fn cell_state(&self, i: u16, j: u16) -> CellState {
         if let GameState::Running(objs) = &self.state {
             if objs.player == Some((i, j)) {
-            return CellState::Player;
+                return CellState::Player;
             }
             if objs.target == Some((i, j)) {
-               return CellState::Target;
+                return CellState::Target;
             }
             for obstacle in &objs.obstacles {
                 if *obstacle == (i, j) {
@@ -65,11 +66,13 @@ impl GameModelInterface for GameModel {
         }
         CellState::Empty
     }
+
     fn update(&mut self, time: i64) -> Result<()> {
         self.update(time)
     }
-    fn action(&mut self, _act: GameCommand) -> Result<()> {
-        todo!("in the future");
+
+    fn action(&mut self, act: GameCommand) -> Result<()> {
+        self.action(act)
     }
 }
 
@@ -96,5 +99,4 @@ mod game_model_tests {
         assert!(r.is_err());
         Ok(())
     }
-
 }

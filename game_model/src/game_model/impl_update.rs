@@ -80,11 +80,34 @@ fn extract_list(update_result: &mlua::Table, name: &str) -> Vec<(u16, u16)> {
 }
 
 //  //  //  //  //  //  //  //
-//        TEST              //
+//        TESTS             //
 //  //  //  //  //  //  //  //
 #[cfg(test)]
 mod game_model_tests {
     use super::*;
+
+    #[test]
+    fn check_errors() -> Result<()> {
+        let code = r#"
+                        function update(time)
+                        end
+                    "#;
+        let mut model = GameModel::new(code)?;
+        model.update(-1)?;
+        match &model.state {
+            GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
+            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::Running(objs) => {
+                assert!(objs.player == Some((11, 7)));
+                assert!(objs.target == Some((2, 6)));
+                let len = objs.obstacles.len();
+                assert!(len == 2, "invalid len() - {}", len);
+                assert!(objs.obstacles[0] == (3, 14));
+                assert!(objs.obstacles[1] == (4, 15));
+                Ok(())
+            }
+        }
+    }
 
     #[test]
     fn all_in() -> Result<()> {
@@ -105,12 +128,12 @@ mod game_model_tests {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
-                assert!(objs.player == Some((11,7)));
-                assert!(objs.target == Some((2,6)));
+                assert!(objs.player == Some((11, 7)));
+                assert!(objs.target == Some((2, 6)));
                 let len = objs.obstacles.len();
-                assert!( len == 2, "invalid len() - {}", len);
-                assert!(objs.obstacles[0] == (3,14));
-                assert!(objs.obstacles[1] == (4,15));
+                assert!(len == 2, "invalid len() - {}", len);
+                assert!(objs.obstacles[0] == (3, 14));
+                assert!(objs.obstacles[1] == (4, 15));
                 Ok(())
             }
         }
@@ -136,10 +159,10 @@ mod game_model_tests {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
                 let len = objs.obstacles.len();
-                assert!( len == 3, "invalid len() - {}", len);
-                assert!(objs.obstacles[0] == (13,4));
-                assert!(objs.obstacles[1] == (14,4));
-                assert!(objs.obstacles[2] == (14,5));
+                assert!(len == 3, "invalid len() - {}", len);
+                assert!(objs.obstacles[0] == (13, 4));
+                assert!(objs.obstacles[1] == (14, 4));
+                assert!(objs.obstacles[2] == (14, 5));
                 Ok(())
             }
         }
@@ -165,8 +188,8 @@ mod game_model_tests {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
                 let len = objs.obstacles.len();
-                assert!( len == 1, "invalid len() - {}", len);
-                assert!(objs.obstacles[0] == (5,6));
+                assert!(len == 1, "invalid len() - {}", len);
+                assert!(objs.obstacles[0] == (5, 6));
                 Ok(())
             }
         }
@@ -191,7 +214,7 @@ mod game_model_tests {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
                 let len = objs.obstacles.len();
-                assert!( len == 0, "invalid len() - {}", len);
+                assert!(len == 0, "invalid len() - {}", len);
                 Ok(())
             }
         }
@@ -212,7 +235,7 @@ mod game_model_tests {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
-                assert!(objs.target == Some((13,14)));
+                assert!(objs.target == Some((13, 14)));
                 assert!(objs.player.is_none());
                 assert!(objs.obstacles.is_empty());
                 Ok(())
@@ -235,7 +258,7 @@ mod game_model_tests {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
-                assert!(objs.player == Some((3,4)));
+                assert!(objs.player == Some((3, 4)));
                 assert!(objs.target.is_none());
                 assert!(objs.obstacles.is_empty());
                 Ok(())
