@@ -54,7 +54,7 @@ function update(time)
         obstacles = {
             {9,9},
             {8,9},
-            {9,9},
+            {9,13},
         },
         GameOver,
     }

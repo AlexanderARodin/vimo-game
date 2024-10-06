@@ -6,120 +6,82 @@ use super::app_model::AppModel;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph};
 use Constraint::*;
-use Direction::*;
 
-mod tui_view;
-use tui_view::*;
-
-mod game_view;
-use game_view::GameView;
+mod game_widget;
+use game_widget::GameWidget;
 
 use game_model::GameModelInterface;
 
+mod popup;
+
 //  //  //  //  //  //  //  //
-pub fn view(model: &mut AppModel, frame: &mut Frame) {
-    let area = frame.area();
-    let l = Layout::vertical([Length(5), Min(35), Min(4)]).split(area);
-    {
-        TitleView().view(frame, l[0]);
-    }
+pub fn view(model: &mut AppModel, area: Rect, buf: &mut Buffer) {
+    let l = Layout::vertical([Length(4), Min(35), Min(4)]).split(area);
+
+    TitleWidget().render(l[0], buf);
     {
         if let Some(game) = &model.game {
-            PlaygroundView(Some(game)).view(frame, l[1]);
-        }else{
-            PlaygroundView(None).view(frame, l[1]);
+            PlaygroundWidget(Some(game)).render(l[1], buf);
+        } else {
+            PlaygroundWidget(None).render(l[1], buf);
         }
-    }
-    {
-        // fight with this MUT
-        EditorView(&mut model.ed_state).view(frame, l[2]);
-    }
+    } // fight with this MUT
+    EditorWidget(&mut model.ed_state).render(l[2], buf);
 
     if model.is_popup {
-        let popup_area = Rect {
-            x: area.width / 6,
-            y: area.height / 6,
-            width: area.width * 4 / 6,
-            height: area.height * 4 / 6,
-        };
-        frame.render_widget(ratatui::widgets::Clear::default(), popup_area);
-        let popup_block = Block::bordered()
-            .title("GameModel Lua Editor");
-        frame.render_widget(popup_block, popup_area);
+        popup::render_popup(area, buf);
     }
 }
+
 //  //  //  //  //  //  //  //
-struct TitleView();
-impl TuiView for TitleView {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
-        let title =
-            Paragraph::new("main title here").block(Block::bordered().title("title of Main Title"));
-        frame.render_widget(title, area);
+struct TitleWidget();
+impl Widget for TitleWidget {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        Paragraph::new("main title here").block(Block::bordered().title("title of Main Title"))
+            .render(area, buf);
     }
 }
 
-struct EditorView<'a>(&'a mut edtui::EditorState);
-impl TuiView for EditorView<'_> {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
-        let editor = edtui::EditorView::new(&mut self.0);
-        frame.render_widget(editor, area);
+struct EditorWidget<'a>(&'a mut edtui::EditorState);
+impl Widget for EditorWidget<'_> {
+    fn render(mut self, area: Rect, buf: &mut Buffer) {
+        edtui::EditorView::new(&mut self.0)
+            .render(area, buf);
     }
 }
 
-struct PlaygroundView<'a>(Option<&'a dyn GameModelInterface>);
-impl TuiView for PlaygroundView<'_> {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
-        //let main_block = Block::into//bordered();
-        let inner_area = area; //main_block.inner(area);
-                               //frame.render_widget(main_block, area);
+struct PlaygroundWidget<'a>(Option<&'a dyn GameModelInterface>);
+impl Widget for PlaygroundWidget<'_> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let [left_bar, other] = Layout::horizontal([Length(3), Length(67)]).areas(area);
+        let [top_bar, play_zone] = Layout::vertical([Length(1), Length(33)]).areas(other);
 
-        sub_views_with_layouts(
-            frame,
-            inner_area,
-            Horizontal,
-            [
-                (&mut PlaygoundLeftView(), Length(3)),
-                (&mut PlaygoundRightView(self.0), Length(67)),
-            ],
-        );
+        LeftGameBarWidget().render(left_bar, buf);
+        TopGameBarWidget().render(top_bar, buf);
+        GameWidget(self.0).render(play_zone, buf);
     }
 }
 
-struct PlaygoundLeftView();
-impl TuiView for PlaygoundLeftView {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
+struct LeftGameBarWidget();
+impl Widget for LeftGameBarWidget  {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let mut s = String::from("\n\n");
         for i in 0x0..0x10 {
             s += &format!("[{:X}]\n\n", i);
         }
-        let text = Paragraph::new(s);
-        frame.render_widget(text, area);
+        Paragraph::new(s)
+            .render(area, buf);
     }
 }
 
-struct PlaygoundRightView<'a>(Option<&'a dyn GameModelInterface>);
-impl TuiView for PlaygoundRightView<'_> {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
-        sub_views_with_layouts(
-            frame,
-            area,
-            Vertical,
-            [
-                (&mut PlaygoundRightTopView(), Length(1)),
-                (&mut GameView(self.0), Length(33)),
-            ],
-        );
-    }
-}
-
-struct PlaygoundRightTopView();
-impl TuiView for PlaygoundRightTopView {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
+struct TopGameBarWidget();
+impl Widget for TopGameBarWidget  {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let mut s = String::from(" ");
         for i in 0x0..0x10 {
             s += &format!(" [{:X}]", i);
         }
-        let text = Paragraph::new(s);
-        frame.render_widget(text, area);
+        Paragraph::new(s)
+            .render(area, buf);
     }
 }

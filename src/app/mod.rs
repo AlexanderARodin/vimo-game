@@ -23,7 +23,7 @@ pub fn run(terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
 
     while !model.is_exiting() {
         // DRAW
-        terminal.draw(|frame| viewer::view(&mut model, frame))?;
+        terminal.draw(|frame| viewer::view(&mut model, frame.area(), frame.buffer_mut()))?;
 
         // UPDATE
         //      get inputs

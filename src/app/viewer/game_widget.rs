@@ -11,23 +11,22 @@ use game_model::{
     CellState::{self, *},
     GameModelInterface,
 };
-use super::tui_view::*;
 
 //  //  //  //  //  //  //  //
-pub struct GameView<'a>(pub Option<&'a dyn GameModelInterface>);
-impl TuiView for GameView<'_> {
-    fn view(&mut self, frame: &mut Frame, area: Rect) {
+pub struct GameWidget<'a>(pub Option<&'a dyn GameModelInterface>);
+impl Widget for GameWidget<'_> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered();
         let inner_area = block.inner(area);
 
-        frame.render_widget(block, area);
+        block.render(area,buf);
 
         if let Some(game) = self.0 {
             for i in 0x0..0x10 {
                 for j in 0x0..0x10 {
                     if let Some(rc) = ij2rect(&inner_area, i, j) {
                         let cell_state = game.cell_state(i, j);
-                        frame.render_widget(GameCellWG(cell_state), rc);
+                        GameCellWG(cell_state).render(rc, buf);
                     }
                 }
             }
@@ -64,11 +63,6 @@ impl Widget for GameCellWG {
                 buf[left].set_char(' ').set_bg(Color::Black);
                 buf[right].set_char(' ').set_bg(Color::Black);
             }
-            //_ => {
-            //    buf[center].set_char('?').set_bg(ebg);
-            //    buf[left].set_char('?').set_bg(ebg);
-            //    buf[right].set_char('?').set_bg(ebg);
-            //}
         }
     }
 }
