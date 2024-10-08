@@ -9,7 +9,7 @@ anyhow.workspace = true
 raalog.workspace = true
 
 ratatui = "0.28.1"
-edtui = "0.7.2"
+edtui = "0.8.1"
 
 game_model = { path = "./game_model" }
 

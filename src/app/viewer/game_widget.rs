@@ -1,5 +1,7 @@
 #[allow(non_upper_case_globals)]
-static ebg: Color = Color::Rgb(64, 64, 64);
+static empty_bg: Color = Color::Rgb(8, 8, 8);
+#[allow(non_upper_case_globals)]
+static obstacle_bg: Color = Color::Rgb(64, 64, 64);
 
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
@@ -19,7 +21,7 @@ impl Widget for GameWidget<'_> {
         let block = Block::bordered();
         let inner_area = block.inner(area);
 
-        block.render(area,buf);
+        block.render(area, buf);
 
         if let Some(game) = self.0 {
             for i in 0x0..0x10 {
@@ -44,24 +46,27 @@ impl Widget for GameCellWG {
 
         match self.0 {
             Empty => {
-                buf[center].set_char(' ').set_bg(ebg);
-                buf[left].set_char(' ').set_bg(ebg);
-                buf[right].set_char(' ').set_bg(ebg);
+                buf[center].set_char(' ').set_bg(empty_bg);
+                buf[left].set_char(' ').set_bg(empty_bg);
+                buf[right].set_char(' ').set_bg(empty_bg);
             }
             Player => {
-                buf[center].set_char('*').set_bg(ebg).set_fg(Color::Green);
-                buf[left].set_char('[').set_bg(ebg);
-                buf[right].set_char(']').set_bg(ebg);
+                buf[center].set_char('*').set_bg(empty_bg).set_fg(Color::Green);
+                buf[left].set_char('[').set_bg(empty_bg);
+                buf[right].set_char(']').set_bg(empty_bg);
             }
             Target => {
-                buf[center].set_char('#').set_bg(Color::Black).set_fg(Color::Red);
+                buf[center]
+                    .set_char('#')
+                    .set_bg(Color::Black)
+                    .set_fg(Color::Red);
                 buf[left].set_char(' ').set_bg(Color::Black);
                 buf[right].set_char(' ').set_bg(Color::Black);
             }
             Obstacle => {
-                buf[center].set_char(' ').set_bg(Color::Black);
-                buf[left].set_char(' ').set_bg(Color::Black);
-                buf[right].set_char(' ').set_bg(Color::Black);
+                buf[center].set_char(' ').set_bg(obstacle_bg);
+                buf[left].set_char(' ').set_bg(obstacle_bg);
+                buf[right].set_char(' ').set_bg(obstacle_bg);
             }
         }
     }

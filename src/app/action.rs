@@ -6,7 +6,7 @@ pub enum Action {
     Quit,
     TranslateRawEvent(xEvent::Event),
     UpdateTimer,
-    LoadCode,
+    ApplyEditedCode,
     GameUpdate(i64),
     HandleByEditor(xEvent::Event),
     PopupLuaEditor,

@@ -7,6 +7,7 @@ use super::app_model::{AppModel, AppModelState};
 use game_model::GameModelInterface;
 
 mod key_binder;
+mod command_string;
 
 //  //  //  //  //  //  //  //
 static TICK: std::time::Duration = std::time::Duration::from_millis(250);
@@ -16,19 +17,27 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
         Action::TranslateRawEvent(ev) => {
             return key_binder::translate_event(
                 ev,
-                model.ed_state.mode == edtui::EditorMode::Normal,
+                model.command_editor_state.mode == edtui::EditorMode::Normal,
             )
         }
         Action::HandleByEditor(ev) => {
-            model.ed_handler.on_event(ev.clone(), &mut model.ed_state);
+            if model.is_popup {
+                model.game_editor_handler.on_event(ev.clone(), &mut model.game_editor_state);
+            }else{
+                model.ed_handler.on_event(ev.clone(), &mut model.command_editor_state);
+            }
             Ok(Action::Noop)
         }
         Action::Quit => {
             model.state = AppModelState::Exiting;
             Ok(Action::Noop)
         }
-        Action::LoadCode => {
-            return load_code(model);
+        Action::ApplyEditedCode => {
+            if model.is_popup {
+                return apply_game_code(model);
+            }else{
+                return apply_command_code(model);
+            }
         }
         Action::GameUpdate(t) => {
             if let Some(game) = &mut model.game {
@@ -56,9 +65,21 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
 
 //  //  //  //  //  //  //  //
 #[inline(always)]
-fn load_code(model: &mut AppModel) -> Result<Action> {
-    model.ed_state.mode = edtui::EditorMode::Normal;
-    let code: String = model.ed_state.lines.clone().into();
+fn apply_command_code(model: &mut AppModel) -> Result<Action> {
+    model.command_editor_state.mode = edtui::EditorMode::Normal;
+    let src_command: String = model.command_editor_state.lines.clone().into();
+    let clean_command: String = command_string::convert(&src_command)?;
+
+    trace!("COMMAND <{}>", clean_command);
+
+    Ok(Action::Noop)
+    //Err(anyhow::anyhow!("No implementaion for Command Encoding"))
+}
+
+#[inline(always)]
+fn apply_game_code(model: &mut AppModel) -> Result<Action> {
+    model.game_editor_state.mode = edtui::EditorMode::Normal;
+    let code: String = model.game_editor_state.lines.clone().into();
     match game_model::GameModel::new(&code) {
         Ok(new_game) => {
             model.game = Some(new_game);

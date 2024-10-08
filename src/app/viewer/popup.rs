@@ -2,15 +2,15 @@
 use raalog::{debug, error, info, trace, warn};
 
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, BorderType, Clear, Paragraph};
+use ratatui::widgets::{Block, BorderType, Clear};
 use Constraint::*;
 
 //  //  //  //  //  //  //  //
-static SPC: u16 = 15;
+static SPC: u16 = 20;
 
-pub fn render_popup(area: Rect, buf: &mut Buffer) {
-    let vls = Layout::vertical([Percentage(SPC), Min(10), Percentage(SPC)]).split(area);
-    let hls = Layout::horizontal([Percentage(SPC), Min(10), Percentage(SPC)]).split(vls[1]);
+pub fn render_editor_popup(area: Rect, buf: &mut Buffer, state: &mut edtui::EditorState) {
+    let vls = Layout::vertical([Percentage(SPC), Min(10), Max(1)]).split(area);
+    let hls = Layout::horizontal([Percentage(SPC), Min(10), Max(2)]).split(vls[1]);
 
     let popup_area = hls[1];
 
@@ -21,11 +21,7 @@ pub fn render_popup(area: Rect, buf: &mut Buffer) {
 
     Clear.render(popup_area, buf);
     popup_border.render(popup_area, buf);
-
-    render_content(inner, buf);
+    edtui::EditorView::new(state)
+        .render(inner, buf);
 }
 
-//  //  //  //  //  //  //  //
-fn render_content(area: Rect, buf: &mut Buffer) {
-    Paragraph::new("t t t t t t t t").render(area, buf);
-}
