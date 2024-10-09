@@ -7,8 +7,11 @@ pub enum Action {
     TranslateRawEvent(xEvent::Event),
     UpdateTimer,
     ApplyEditedCode,
-    GameUpdate(i64),
+    Tick,
+    GameUpdate,
+    GameAction,
     HandleByEditor(xEvent::Event),
     PopupLuaEditor,
-    //Error(String),
+    QueueCommand(String),
+    Warning(String),
 }

@@ -22,7 +22,7 @@ pub fn convert(src: &str) -> Result<String> {
                 }
                 mult = None;
             }
-            _ => return Err(anyhow!("unsupported character")),
+            c @ _ => return Err(anyhow!("unsupported character: <{}>", c)),
         };
     }
     Ok(res)

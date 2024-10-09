@@ -8,7 +8,9 @@ use game_model::GameModel;
 //  //  //  //  //  //  //  //
 pub struct AppModel {
     pub(crate) start_time: std::time::SystemTime,
-    pub(crate) counter: i64,
+    pub(crate) tick_counter: u16,
+    pub(crate) game_counter: i64,
+    pub(crate) game_actions: Vec<char>,
     pub(super) game: Option<GameModel>,
     pub(super) game_editor_state: edtui::EditorState,
     pub(super) game_editor_handler: edtui::EditorEventHandler,
@@ -29,7 +31,9 @@ impl AppModel {
     pub fn new() -> Result<Self> {
         let new_model = Self {
             start_time: std::time::SystemTime::now(),
-            counter: -1,
+            tick_counter: 0,
+            game_counter: 0,
+            game_actions: Vec::new(),
             game: None,
             game_editor_state: edtui::EditorState::new(edtui::Lines::from(START_CODE)),
             game_editor_handler: edtui::EditorEventHandler::default(),
@@ -50,10 +54,29 @@ impl AppModel {
 
 static START_CODE: &str = r#"-- demo startup dummy code on Lua
 -- print("hell no word!!1")
+local player;
+
+function action(ac)
+    -- print("act:", ac)
+    if ac == 1 then
+        player = { player[1], player[2] - 1 }
+    end
+    if ac == 2 then
+        player = { player[1], player[2] + 1 }
+    end
+    if ac == 3 then
+        player = { player[1] - 1, player[2] }
+    end
+    if ac == 4 then
+        player = { player[1] + 1, player[2] }
+    end
+end
 function update(time)
-    -- print("time:", time)
+    if time == -1 then
+        player = {2, 2}
+    end
     return {
-        player = {3,2},
+        player = player,
         target = {13,5},
         obstacles = {
             {9,9},
