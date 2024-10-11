@@ -4,38 +4,25 @@ use anyhow::Result;
 use raalog::{debug, error, info, trace, warn};
 
 use crate::lua_connector;
-use crate::CellState;
-use crate::GameCommand;
-use crate::GameModelInterface;
+use crate::prelude::*;
 
 //  //  //  //  //  //  //  //
-mod impl_update;
+mod game_state;
 mod impl_action;
+mod impl_update;
 
-#[derive(PartialEq)]
-pub enum GameState {
-    Undef,
-    Running(GameObjects),
-    GameOver(String),
-}
-
-#[derive(PartialEq)]
-pub struct GameObjects {
-    pub(super) player: Option<(u16, u16)>,
-    pub(super) target: Option<(u16, u16)>,
-    pub(super) obstacles: Vec<(u16, u16)>,
-}
+pub use game_state::*;
 
 pub struct GameModel {
     lua: mlua::Lua,
-    pub(crate) state: GameState,
+    pub(crate) game_state: GameState,
 }
 
 impl GameModel {
     pub fn new(code: &str) -> Result<Self> {
         let new_one = Self {
             lua: lua_connector::init(code)?,
-            state: GameState::Undef,
+            game_state: GameState::Undef,
         };
 
         trace!(" + GameModel::new()");
@@ -44,35 +31,29 @@ impl GameModel {
 }
 impl Drop for GameModel {
     fn drop(&mut self) {
-        self.state = GameState::Undef;
+        self.game_state = GameState::Undef;
         trace!(" - GameModel::drop()");
     }
 }
 
 impl GameModelInterface for GameModel {
-    fn cell_state(&self, i: u16, j: u16) -> CellState {
-        if let GameState::Running(objs) = &self.state {
-            if objs.player == Some((i, j)) {
-                return CellState::Player;
-            }
-            if objs.target == Some((i, j)) {
-                return CellState::Target;
-            }
-            for obstacle in &objs.obstacles {
-                if *obstacle == (i, j) {
-                    return CellState::Obstacle;
-                }
-            }
-        }
-        CellState::Empty
+    fn state(&self) -> &GameState {
+        &self.game_state
     }
-
     fn update(&mut self, time: i64) -> Result<()> {
-        self.update(time)
+        if let GameState::GameOver(_) = self.game_state {
+            Ok(())
+        } else {
+            self.update(time)
+        }
     }
 
     fn action(&mut self, act: GameCommand) -> Result<()> {
-        self.action(act)
+        if let GameState::GameOver(_) = self.game_state {
+            Ok(())
+        } else {
+            self.action(act)
+        }
     }
 }
 
@@ -87,7 +68,7 @@ mod game_model_tests {
     fn new_undef_state() -> Result<()> {
         let code = "";
         let model = GameModel::new(code)?;
-        assert!(model.state == GameState::Undef);
+        assert!(model.game_state == GameState::Undef);
         Ok(())
     }
 

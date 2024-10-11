@@ -10,7 +10,7 @@ use Constraint::*;
 mod game_widget;
 use game_widget::GameWidget;
 
-use game_model::GameModelInterface;
+use game_model::prelude::*;
 
 mod popup;
 

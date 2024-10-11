@@ -4,8 +4,8 @@ use anyhow::Result;
 use raalog::{debug, error, info, trace, warn};
 
 use super::GameModel;
-use super::GameObjects;
-use super::GameState;
+use super::game_state::GameObjects;
+use super::game_state::GameState;
 
 //  //  //  //  //  //  //  //
 impl GameModel {
@@ -16,7 +16,7 @@ impl GameModel {
             update.call::<_, mlua::Table>(mlua::Value::Integer(time))?;
 
         if let Ok(s) = update_result.get::<&str, String>("GameOver") {
-            self.state = GameState::GameOver(s.clone());
+            self.game_state = GameState::GameOver(s.clone());
             return Err(anyhow::anyhow!("GameOver <{}>", s));
         }
         {
@@ -26,7 +26,7 @@ impl GameModel {
                 obstacles: extract_list(&update_result, "obstacles"),
             };
 
-            self.state = GameState::Running(objects);
+            self.game_state = GameState::Running(objects);
             Ok(())
         }
     }
@@ -94,7 +94,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -124,7 +124,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -152,7 +152,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -181,7 +181,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -207,7 +207,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -231,7 +231,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -254,7 +254,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -275,7 +275,7 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.update(-1)?;
-        match &model.state {
+        match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {

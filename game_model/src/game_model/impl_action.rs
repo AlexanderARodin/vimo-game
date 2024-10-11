@@ -5,7 +5,7 @@ use raalog::{debug, error, info, trace, warn};
 
 use super::GameCommand;
 use super::GameModel;
-use super::GameState;
+use super::game_state::GameState;
 
 //  //  //  //  //  //  //  //
 impl GameModel {
@@ -20,7 +20,7 @@ impl GameModel {
                         let Ok(s) = other_type.to_string() else {
                             return Err(anyhow::anyhow!("invalid action type result"));
                         };
-                        self.state = GameState::GameOver(s);
+                        self.game_state = GameState::GameOver(s);
                         return Ok(());
                     }
                 }
@@ -48,16 +48,16 @@ mod game_model_tests {
                     "#;
         let mut model = GameModel::new(code)?;
         model.action(GameCommand::Up)?;
-        assert!(model.state == GameState::GameOver("1".to_owned()));
+        assert!(model.game_state == GameState::GameOver("1".to_owned()));
 
         model.action(GameCommand::Down)?;
-        assert!(model.state == GameState::GameOver("2".to_owned()));
+        assert!(model.game_state == GameState::GameOver("2".to_owned()));
 
         model.action(GameCommand::Left)?;
-        assert!(model.state == GameState::GameOver("3".to_owned()));
+        assert!(model.game_state == GameState::GameOver("3".to_owned()));
 
         model.action(GameCommand::Right)?;
-        assert!(model.state == GameState::GameOver("4".to_owned()));
+        assert!(model.game_state == GameState::GameOver("4".to_owned()));
 
         Ok(())
     }

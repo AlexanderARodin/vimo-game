@@ -3,7 +3,7 @@ use anyhow::Result;
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
-use game_model::GameModel;
+use game_model::prelude::*;
 
 //  //  //  //  //  //  //  //
 pub struct AppModel {

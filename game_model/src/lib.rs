@@ -1,7 +1,10 @@
 mod game_interface;
-pub use game_interface::*;
 
 mod game_model;
 mod lua_connector;
 
-pub use game_model::GameModel;
+
+pub mod prelude {
+    pub use crate::game_interface::{GameModelInterface, GameCommand};
+    pub use crate::game_model::{GameModel, GameState, CellState};
+}

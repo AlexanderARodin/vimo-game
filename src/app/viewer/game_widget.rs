@@ -9,10 +9,7 @@ use raalog::{debug, error, info, trace, warn};
 use ratatui::prelude::*;
 use ratatui::widgets::Block;
 
-use game_model::{
-    CellState::{self, *},
-    GameModelInterface,
-};
+use game_model::prelude::*;
 
 //  //  //  //  //  //  //  //
 pub struct GameWidget<'a>(pub Option<&'a dyn GameModelInterface>);
@@ -24,10 +21,11 @@ impl Widget for GameWidget<'_> {
         block.render(area, buf);
 
         if let Some(game) = self.0 {
+            let game_state = game.state();
             for i in 0x0..0x10 {
                 for j in 0x0..0x10 {
                     if let Some(rc) = ij2rect(&inner_area, i, j) {
-                        let cell_state = game.cell_state(i, j);
+                        let cell_state = game_state.cell_state(i, j);
                         GameCellWG(cell_state).render(rc, buf);
                     }
                 }
@@ -45,17 +43,17 @@ impl Widget for GameCellWG {
         let center = Position::new(area.x + 1, area.y);
 
         match self.0 {
-            Empty => {
+            CellState::Empty => {
                 buf[center].set_char(' ').set_bg(empty_bg);
                 buf[left].set_char(' ').set_bg(empty_bg);
                 buf[right].set_char(' ').set_bg(empty_bg);
             }
-            Player => {
+            CellState::Player => {
                 buf[center].set_char('*').set_bg(empty_bg).set_fg(Color::Green);
                 buf[left].set_char('[').set_bg(empty_bg);
                 buf[right].set_char(']').set_bg(empty_bg);
             }
-            Target => {
+            CellState::Target => {
                 buf[center]
                     .set_char('#')
                     .set_bg(Color::Black)
@@ -63,7 +61,7 @@ impl Widget for GameCellWG {
                 buf[left].set_char(' ').set_bg(Color::Black);
                 buf[right].set_char(' ').set_bg(Color::Black);
             }
-            Obstacle => {
+            CellState::Obstacle => {
                 buf[center].set_char(' ').set_bg(obstacle_bg);
                 buf[left].set_char(' ').set_bg(obstacle_bg);
                 buf[right].set_char(' ').set_bg(obstacle_bg);

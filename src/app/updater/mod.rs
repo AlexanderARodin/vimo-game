@@ -4,7 +4,7 @@ use raalog::{debug, error, info, trace, warn};
 
 use super::action::Action;
 use super::app_model::{AppModel, AppModelState};
-use game_model::GameModelInterface;
+use game_model::prelude::*;
 
 mod command_string;
 mod key_binder;
@@ -88,10 +88,10 @@ fn action_game(model: &mut AppModel) -> Result<Action> {
     }
     let c = model.game_actions.remove(0);
     let game_command = match c {
-        'k' => game_model::GameCommand::Up,
-        'j' => game_model::GameCommand::Down,
-        'h' => game_model::GameCommand::Left,
-        'l' => game_model::GameCommand::Right,
+        'k' => GameCommand::Up,
+        'j' => GameCommand::Down,
+        'h' => GameCommand::Left,
+        'l' => GameCommand::Right,
         _ => return Err(anyhow::anyhow!("Unexpected character <{}> in game_command", c)),
     };
     if let Some(game) = &mut model.game {
@@ -138,7 +138,7 @@ fn apply_command_code(model: &mut AppModel) -> Result<Action> {
 fn apply_game_code(model: &mut AppModel) -> Result<Action> {
     model.game_editor_state.mode = edtui::EditorMode::Normal;
     let code: String = model.game_editor_state.lines.clone().into();
-    match game_model::GameModel::new(&code) {
+    match GameModel::new(&code) {
         Ok(new_game) => {
             model.game = Some(new_game);
             model.game_counter = -1;
