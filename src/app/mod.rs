@@ -17,23 +17,23 @@ use ratatui::crossterm::event as xEvent;
 use ratatui::prelude::*;
 
 //  //  //  //  //  //  //  //
-pub fn run(terminal: &mut ratatui::Terminal<impl Backend>) -> Result<()> {
+pub fn run(terminal: &mut ratatui::Terminal<impl Backend>, app_config: &crate::config::AppConfig) -> Result<()> {
     trace!(" -> app::run()");
-    let mut model = AppModel::new()?;
+    let mut app= AppModel::new(app_config)?;
 
-    while !model.is_exiting() {
+    while !app.is_exiting() {
         // DRAW
-        terminal.draw(|frame| viewer::view(&mut model, frame.area(), frame.buffer_mut()))?;
+        terminal.draw(|frame| viewer::view(&mut app, frame.area(), frame.buffer_mut()))?;
 
         // UPDATE
         //      get inputs
-        let raw_inputs = collect_events()?;
+        let raw_inputs = collect_events(&app_config.refresh_tiem)?;
         check_terminate_sequence(&raw_inputs)?;
         //      updating loop
         for event in raw_inputs {
-            invoke_update_loop(Action::TranslateRawEvent(event), &mut model)?;
+            invoke_update_loop(Action::TranslateRawEvent(event), &mut app)?;
         }
-        invoke_update_loop(Action::UpdateTimer, &mut model)?;
+        invoke_update_loop(Action::UpdateTimer, &mut app)?;
     }
     trace!("normal exit");
     Ok(())
@@ -78,10 +78,9 @@ fn check_terminate_sequence(events: &Vec<xEvent::Event>) -> Result<()> {
 }
 
 //  //  //  //  //  //  //  //
-static POLL_WAIT_TIME: std::time::Duration = std::time::Duration::from_millis(16); //from_secs(0);
-fn collect_events() -> Result<Vec<xEvent::Event>> {
+fn collect_events(poll_wait_time: &std::time::Duration) -> Result<Vec<xEvent::Event>> {
     let mut result = Vec::new();
-    while xEvent::poll(POLL_WAIT_TIME)? {
+    while xEvent::poll(*poll_wait_time)? {
         result.push(xEvent::read()?);
     }
     Ok(result)

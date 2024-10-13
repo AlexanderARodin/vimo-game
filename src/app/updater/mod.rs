@@ -10,58 +10,58 @@ mod command_string;
 mod key_binder;
 
 //  //  //  //  //  //  //  //
-static TICK: std::time::Duration = std::time::Duration::from_millis(125);
+//static TICK: std::time::Duration = std::time::Duration::from_millis(125);
 
-pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
+pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
     match act {
         Action::TranslateRawEvent(ev) => {
             return key_binder::translate_event(
                 ev,
-                model.command_editor_state.mode == edtui::EditorMode::Normal,
+                app.command_editor_state.mode == edtui::EditorMode::Normal,
             )
         }
         Action::HandleByEditor(ev) => {
-            if model.is_popup {
-                model
+            if app.is_popup {
+                app
                     .game_editor_handler
-                    .on_event(ev.clone(), &mut model.game_editor_state);
+                    .on_event(ev.clone(), &mut app.game_editor_state);
             } else {
-                model
+                app
                     .ed_handler
-                    .on_event(ev.clone(), &mut model.command_editor_state);
+                    .on_event(ev.clone(), &mut app.command_editor_state);
             }
             Ok(Action::Noop)
         }
         Action::UpdateTimer => {
-            return update_timer(model);
+            return update_timer(app);
         }
         Action::Tick => {
-            if (model.tick_counter & 1) != 0 {
+            if (app.tick_counter & 1) != 0 {
                 return Ok(Action::GameAction);
             } else {
-                model.game_counter += 1;
+                app.game_counter += 1;
                 return Ok(Action::GameUpdate);
             }
         }
         Action::GameAction => {
-            return action_game(model);
+            return action_game(app);
         }
         Action::GameUpdate => {
-            return update_game(model);
+            return update_game(app);
         }
         Action::QueueCommand(cmds) => {
-            model.game_actions = cmds.chars().collect();
+            app.game_actions = cmds.chars().collect();
             Ok(Action::Noop)
         }
         Action::ApplyEditedCode => {
-            if model.is_popup {
-                return apply_game_code(model);
+            if app.is_popup {
+                return apply_game_code(app);
             } else {
-                return apply_command_code(model);
+                return apply_command_code(app);
             }
         }
         Action::PopupLuaEditor => {
-            model.is_popup = !model.is_popup;
+            app.is_popup = !app.is_popup;
             Ok(Action::Noop)
         }
         Action::Warning(s) => {
@@ -69,7 +69,7 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
             Ok(Action::Noop)
         }
         Action::Quit => {
-            model.state = AppModelState::Exiting;
+            app.state = AppModelState::Exiting;
             Ok(Action::Noop)
         }
         _ => {
@@ -82,11 +82,11 @@ pub fn update(model: &mut AppModel, act: &Action) -> Result<Action> {
 //  //  //  //  //  //  //  //
 //  //  //  //  //  //  //  //
 #[inline(always)]
-fn action_game(model: &mut AppModel) -> Result<Action> {
-    if model.game_actions.is_empty() {
+fn action_game(app: &mut AppModel) -> Result<Action> {
+    if app.game_actions.is_empty() {
         return Ok(Action::Noop);
     }
-    let c = model.game_actions.remove(0);
+    let c = app.game_actions.remove(0);
     let game_command = match c {
         'k' => GameCommand::Up,
         'j' => GameCommand::Down,
@@ -94,9 +94,9 @@ fn action_game(model: &mut AppModel) -> Result<Action> {
         'l' => GameCommand::Right,
         _ => return Err(anyhow::anyhow!("Unexpected character <{}> in game_command", c)),
     };
-    if let Some(game) = &mut model.game {
+    if let Some(game) = &mut app.game {
         if let Err(e) = game.action(game_command) {
-            model.game = None;
+            app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted.\n{}",
                 e
@@ -107,10 +107,10 @@ fn action_game(model: &mut AppModel) -> Result<Action> {
 }
 
 #[inline(always)]
-fn update_game(model: &mut AppModel) -> Result<Action> {
-    if let Some(game) = &mut model.game {
-        if let Err(e) = game.update(model.game_counter) {
-            model.game = None;
+fn update_game(app: &mut AppModel) -> Result<Action> {
+    if let Some(game) = &mut app.game {
+        if let Err(e) = game.update(app.game_counter) {
+            app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted.\n{}",
                 e
@@ -121,9 +121,9 @@ fn update_game(model: &mut AppModel) -> Result<Action> {
 }
 
 #[inline(always)]
-fn apply_command_code(model: &mut AppModel) -> Result<Action> {
-    model.command_editor_state.mode = edtui::EditorMode::Normal;
-    let src_command: String = model.command_editor_state.lines.clone().into();
+fn apply_command_code(app: &mut AppModel) -> Result<Action> {
+    app.command_editor_state.mode = edtui::EditorMode::Normal;
+    let src_command: String = app.command_editor_state.lines.clone().into();
     match command_string::convert(&src_command) {
         Ok(s) => Ok(Action::QueueCommand(s)),
         Err(e) => Ok(Action::Warning(format!(
@@ -135,18 +135,18 @@ fn apply_command_code(model: &mut AppModel) -> Result<Action> {
 }
 
 #[inline(always)]
-fn apply_game_code(model: &mut AppModel) -> Result<Action> {
-    model.game_editor_state.mode = edtui::EditorMode::Normal;
-    let code: String = model.game_editor_state.lines.clone().into();
+fn apply_game_code(app: &mut AppModel) -> Result<Action> {
+    app.game_editor_state.mode = edtui::EditorMode::Normal;
+    let code: String = app.game_editor_state.lines.clone().into();
     match GameModel::new(&code) {
         Ok(new_game) => {
-            model.game = Some(new_game);
-            model.game_counter = -1;
+            app.game = Some(new_game);
+            app.game_counter = -1;
             info!("Lua restarted with new code");
             Ok(Action::GameUpdate)
         }
         Err(e) => {
-            model.game = None;
+            app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted\n{}",
                 e
@@ -157,19 +157,19 @@ fn apply_game_code(model: &mut AppModel) -> Result<Action> {
 
 //  //  //  //  //  //  //  //
 #[inline(always)]
-fn update_timer(model: &mut AppModel) -> Result<Action> {
-    let prev = model.start_time;
+fn update_timer(app: &mut AppModel) -> Result<Action> {
+    let prev = app.start_time;
     match prev.elapsed() {
         Ok(delta) => {
-            if delta >= TICK {
-                model.start_time = std::time::SystemTime::now();
-                model.tick_counter += 1;
+            if delta >= app.config.tick_interval {
+                app.start_time = std::time::SystemTime::now();
+                app.tick_counter += 1;
                 return Ok(Action::Tick);
             }
             return Ok(Action::Noop);
         }
         Err(e) => {
-            model.tick_counter = 0;
+            app.tick_counter = 0;
             return Ok(Action::Warning(format!(
                 "System timer error (see below):\n{}",
                 e

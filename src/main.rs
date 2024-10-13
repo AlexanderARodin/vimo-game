@@ -1,16 +1,18 @@
 use anyhow::Result;
-
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
 mod app;
+mod config;
 
 //  //  //  //  //  //  //  //
 fn main() -> Result<()> {
     log_init();
 
+    let app_config = config::setup()?;
+
     let mut terminal = ratatui::init();
-    let result = app::run(&mut terminal);
+    let result = app::run(&mut terminal, &app_config);
     ratatui::restore();
 
     if let Err(ref e) = result {

@@ -15,24 +15,24 @@ use game_model::prelude::*;
 mod popup;
 
 //  //  //  //  //  //  //  //
-pub fn view(model: &mut AppModel, area: Rect, buf: &mut Buffer) {
+pub fn view(app: &mut AppModel, area: Rect, buf: &mut Buffer) {
     let [top_area, game_area, command_area] =
         Layout::vertical([Length(4), Min(35), Min(4)]).areas(area);
 
     TitleWidget().render(top_area, buf);
 
-    if let Some(game) = &model.game {
+    if let Some(game) = &app.game {
         PlaygroundWidget(Some(game)).render(game_area, buf);
     } else {
         PlaygroundWidget(None).render(game_area, buf);
     }
 
-    edtui::EditorView::new(&mut model.command_editor_state)
+    edtui::EditorView::new(&mut app.command_editor_state)
         .render(command_area, buf);
 
 
-    if model.is_popup {
-        popup::render_editor_popup(area, buf, &mut model.game_editor_state);
+    if app.is_popup {
+        popup::render_editor_popup(area, buf, &mut app.game_editor_state);
     }
 }
 
