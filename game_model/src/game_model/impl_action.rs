@@ -10,7 +10,7 @@ use super::game_state::GameState;
 //  //  //  //  //  //  //  //
 impl GameModel {
     #[inline]
-    pub(super) fn action(&mut self, act: GameCommand) -> Result<()> {
+    pub(super) fn internal_action(&mut self, act: GameCommand) -> Result<()> {
         match act as i64 {
             index @ 1..=4 => {
                 let lua_action: mlua::Function = self.lua.globals().get("action")?;
@@ -47,16 +47,16 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.action(GameCommand::Up)?;
+        model.internal_action(GameCommand::Up)?;
         assert!(model.game_state == GameState::GameOver("1".to_owned()));
 
-        model.action(GameCommand::Down)?;
+        model.internal_action(GameCommand::Down)?;
         assert!(model.game_state == GameState::GameOver("2".to_owned()));
 
-        model.action(GameCommand::Left)?;
+        model.internal_action(GameCommand::Left)?;
         assert!(model.game_state == GameState::GameOver("3".to_owned()));
 
-        model.action(GameCommand::Right)?;
+        model.internal_action(GameCommand::Right)?;
         assert!(model.game_state == GameState::GameOver("4".to_owned()));
 
         Ok(())
@@ -69,10 +69,10 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.action(GameCommand::Up)?;
-        model.action(GameCommand::Down)?;
-        model.action(GameCommand::Left)?;
-        model.action(GameCommand::Right)?;
+        model.internal_action(GameCommand::Up)?;
+        model.internal_action(GameCommand::Down)?;
+        model.internal_action(GameCommand::Left)?;
+        model.internal_action(GameCommand::Right)?;
         Ok(())
     }
 

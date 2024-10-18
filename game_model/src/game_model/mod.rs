@@ -44,7 +44,7 @@ impl GameModelInterface for GameModel {
         if let GameState::GameOver(_) = self.game_state {
             Ok(())
         } else {
-            self.update(time)
+            self.internal_update(time)
         }
     }
 
@@ -52,7 +52,7 @@ impl GameModelInterface for GameModel {
         if let GameState::GameOver(_) = self.game_state {
             Ok(())
         } else {
-            self.action(act)
+            self.internal_action(act)
         }
     }
 }

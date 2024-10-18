@@ -17,6 +17,7 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
         Action::TranslateRawEvent(ev) => {
             return key_binder::translate_event(
                 ev,
+                app.is_popup,
                 app.command_editor_state.mode == edtui::EditorMode::Normal,
             )
         }
@@ -53,8 +54,8 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
             app.game_actions = cmds.chars().collect();
             Ok(Action::Noop)
         }
-        Action::ApplyEditedCode => {
-            if app.is_popup {
+        Action::ApplyEditedCode(is_game_code) => {
+            if *is_game_code {
                 return apply_game_code(app);
             } else {
                 return apply_command_code(app);

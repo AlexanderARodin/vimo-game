@@ -6,7 +6,7 @@ pub enum Action {
     Quit,
     TranslateRawEvent(xEvent::Event),
     UpdateTimer,
-    ApplyEditedCode,
+    ApplyEditedCode(bool), // is GameCode?
     Tick,
     GameUpdate,
     GameAction,

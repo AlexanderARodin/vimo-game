@@ -1,9 +1,9 @@
 [package]
-name = "game_model"
+name = "event_handler"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-raalog.workspace = true
-mlua.workspace = true
+
+crossterm = "0.28.1"

@@ -10,14 +10,15 @@ use super::game_state::GameState;
 //  //  //  //  //  //  //  //
 impl GameModel {
     #[inline]
-    pub(super) fn update(&mut self, time: i64) -> Result<()> {
+    pub(super) fn internal_update(&mut self, time: i64) -> Result<()> {
         let update: mlua::Function = self.lua.globals().get("update")?;
         let update_result: mlua::Table =
             update.call::<_, mlua::Table>(mlua::Value::Integer(time))?;
 
         if let Ok(s) = update_result.get::<&str, String>("GameOver") {
             self.game_state = GameState::GameOver(s.clone());
-            return Err(anyhow::anyhow!("GameOver <{}>", s));
+            //return Err(anyhow::anyhow!("GameOver <{}>", s));
+            return Ok(());
         }
         {
             let objects = GameObjects {
@@ -87,25 +88,23 @@ mod game_model_tests {
     use super::*;
 
     #[test]
-    fn check_errors() -> Result<()> {
+    fn check_game_over() -> Result<()> {
         let code = r#"
                         function update(time)
+                            return {
+                                GameOver,
+                            }
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
-            GameState::Running(objs) => {
-                assert!(objs.player == Some((11, 7)));
-                assert!(objs.target == Some((2, 6)));
-                let len = objs.obstacles.len();
-                assert!(len == 2, "invalid len() - {}", len);
-                assert!(objs.obstacles[0] == (3, 14));
-                assert!(objs.obstacles[1] == (4, 15));
+            GameState::GameOver(msg) => {
+                assert!(msg == "FIN");
                 Ok(())
             }
+            GameState::Running(_) => Err(anyhow::anyhow!("can't be GameState::Runnint(_)"))
         }
     }
 
@@ -123,7 +122,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -151,7 +150,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -180,7 +179,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -206,7 +205,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -230,7 +229,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -253,7 +252,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
@@ -274,7 +273,7 @@ mod game_model_tests {
                         end
                     "#;
         let mut model = GameModel::new(code)?;
-        model.update(-1)?;
+        model.internal_update(-1)?;
         match &model.game_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),

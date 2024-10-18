@@ -6,12 +6,12 @@ use super::Action;
 use ratatui::crossterm::event as xEvent;
 
 #[inline(always)]
-pub(super) fn translate_event(event: &xEvent::Event, is_normal_mode: bool) -> Result<Action> {
+pub(super) fn translate_event(event: &xEvent::Event, is_popuped: bool, is_normal_mode: bool) -> Result<Action> {
     if let xEvent::Event::Key(key) = event {
         if key.modifiers.contains(xEvent::KeyModifiers::CONTROL) {
             if key.code == xEvent::KeyCode::Char('y') {
                 // TODO: <C-CR> doesn't work
-                return Ok(Action::ApplyEditedCode);
+                return Ok(Action::ApplyEditedCode(is_popuped));
             }
             if key.code == xEvent::KeyCode::Char('d') {
                 return Ok(Action::PopupLuaEditor);
