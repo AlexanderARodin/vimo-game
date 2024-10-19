@@ -1,38 +1,92 @@
 use anyhow::Result;
+#[allow(unused_imports)]
+use raalog::{debug, error, info, trace, warn};
 
 use crossterm::event as xEvent;
 
 //  //  //  //  //  //  //  //
+pub enum Events {
+    Tick,
+    Exit,
+    Input(xEvent::Event),
+}
+
 pub struct EventHandler {
-    rx: std::sync::mpsc::Receiver<Result<Vec<xEvent::Event>>>,
+    rx: std::sync::mpsc::Receiver<Result<Events>>,
 }
 
 impl EventHandler {
-    pub fn new(time_out: std::time::Duration) -> Self {
+    pub fn new(tick_duration: std::time::Duration) -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
+        let tx_clone = tx.clone();
         std::thread::spawn(move || loop {
-            let Ok(()) = tx.send(collect_events(&time_out)) else {
-                break;
+            let raw_event = block_til_event();
+            let result_event = preprocess_event(raw_event);
+            let Ok(()) = tx.send(result_event) else {
+                return;
+            };
+        });
+        std::thread::spawn(move || loop {
+            std::thread::sleep(tick_duration);
+            let Ok(()) = tx_clone.send(Ok(Events::Tick)) else {
+                return;
             };
         });
 
         Self { rx }
     }
 
-    pub fn next(&self) -> Result<Vec<xEvent::Event>> {
-        match self.rx.try_recv() {
-            Ok(ev) => ev,
-            Err(std::sync::mpsc::TryRecvError::Empty) => Ok(Vec::new()),
-            Err(disconnected) => Err(disconnected.into()),
-        }
+    pub fn wait_next(&self) -> Result<Events> {
+        self.rx.recv()?
     }
 }
 
 //  //  //  //  //  //  //  //
-fn collect_events(poll_wait_time: &std::time::Duration) -> Result<Vec<xEvent::Event>> {
-    let mut result = Vec::new();
-    while xEvent::poll(*poll_wait_time)? {
-        result.push(xEvent::read()?);
+#[inline(always)]
+fn block_til_event() -> Result<xEvent::Event> {
+    Ok(xEvent::read()?)
+}
+
+#[inline(always)]
+fn preprocess_event(raw_event: Result<xEvent::Event>) -> Result<Events> {
+    match raw_event {
+        Ok(ev) => {
+            if let Some(term_ev) = check_terminate_sequence(&ev) {
+                return Ok(term_ev);
+            } else {
+                return Ok(Events::Input(ev));
+            }
+        }
+        Err(e) => Err(e),
     }
-    Ok(result)
+}
+
+//  //  //  //  //  //  //  //
+fn check_terminate_sequence(event: &xEvent::Event) -> Option<Events> {
+    match event {
+        xEvent::Event::Key(key) => {
+            if key.modifiers.contains(xEvent::KeyModifiers::CONTROL) {
+                // <C-c>
+                if key.code == xEvent::KeyCode::Char('c') {
+                    let msg = "exiting by <C-c>";
+                    warn!("{}", msg);
+                    return Some(Events::Exit);
+                }
+                // <C-/>
+                if key.code == xEvent::KeyCode::Char('/') {
+                    let msg = "aborted by <C-/>";
+                    error!("{}", msg);
+                    panic!("{}", msg);
+                }
+                // <C-p>
+                if key.code == xEvent::KeyCode::Char('p') {
+                    let msg = "stress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\n";
+                    warn!("{}", msg);
+                    return None;
+                }
+            }
+        }
+        _ => {}
+    }
+    None
 }

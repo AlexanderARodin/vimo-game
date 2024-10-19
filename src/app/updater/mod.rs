@@ -14,35 +14,17 @@ mod key_binder;
 
 pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
     match act {
-        Action::TranslateRawEvent(ev) => {
-            return key_binder::translate_event(
-                ev,
-                app.is_popup,
-                app.command_editor_state.mode == edtui::EditorMode::Normal,
-            )
-        }
-        Action::HandleByEditor(ev) => {
-            if app.is_popup {
-                app
-                    .game_editor_handler
-                    .on_event(ev.clone(), &mut app.game_editor_state);
-            } else {
-                app
-                    .ed_handler
-                    .on_event(ev.clone(), &mut app.command_editor_state);
-            }
-            Ok(Action::Noop)
-        }
-        Action::UpdateTimer => {
-            return update_timer(app);
-        }
         Action::Tick => {
-            if (app.tick_counter & 1) != 0 {
+            app.tick_counter += 1;
+            let mask = app.tick_counter & 3;
+            if mask == 0 {
                 return Ok(Action::GameAction);
-            } else {
+            } 
+            if mask == 1 {
                 app.game_counter += 1;
                 return Ok(Action::GameUpdate);
             }
+            return Ok(Action::Noop);
         }
         Action::GameAction => {
             return action_game(app);
@@ -63,6 +45,25 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
         }
         Action::PopupLuaEditor => {
             app.is_popup = !app.is_popup;
+            Ok(Action::Noop)
+        }
+        Action::TranslateRawEvent(ev) => {
+            return key_binder::translate_event(
+                ev,
+                app.is_popup,
+                app.command_editor_state.mode == edtui::EditorMode::Normal,
+            )
+        }
+        Action::HandleByEditor(ev) => {
+            if app.is_popup {
+                app
+                    .game_editor_handler
+                    .on_event(ev.clone(), &mut app.game_editor_state);
+            } else {
+                app
+                    .ed_handler
+                    .on_event(ev.clone(), &mut app.command_editor_state);
+            }
             Ok(Action::Noop)
         }
         Action::Warning(s) => {
@@ -150,29 +151,6 @@ fn apply_game_code(app: &mut AppModel) -> Result<Action> {
             app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted\n{}",
-                e
-            )));
-        }
-    }
-}
-
-//  //  //  //  //  //  //  //
-#[inline(always)]
-fn update_timer(app: &mut AppModel) -> Result<Action> {
-    let prev = app.start_time;
-    match prev.elapsed() {
-        Ok(delta) => {
-            if delta >= app.config.tick_interval {
-                app.start_time = std::time::SystemTime::now();
-                app.tick_counter += 1;
-                return Ok(Action::Tick);
-            }
-            return Ok(Action::Noop);
-        }
-        Err(e) => {
-            app.tick_counter = 0;
-            return Ok(Action::Warning(format!(
-                "System timer error (see below):\n{}",
                 e
             )));
         }

@@ -10,8 +10,7 @@ pub fn setup() -> Result<AppConfig> {
     let clargs = CliArgs::parse();
 
     let app_config = AppConfig {
-        refresh_time: Duration::from_millis(clargs.refresh_time as u64),
-        tick_interval: Duration::from_millis(clargs.interval_tick as u64),
+        refresh_delay: Duration::from_millis( 1000_u64 / (clargs.refresh_rate as u64)),
         game_lua_code: try_load_file(&clargs.game, clargs.tab_to_spaces),
         auto_run: clargs.auto_run,
     };
@@ -20,8 +19,7 @@ pub fn setup() -> Result<AppConfig> {
 
 #[derive(Clone)]
 pub struct AppConfig {
-    pub refresh_time: Duration,
-    pub tick_interval: Duration,
+    pub refresh_delay: Duration,
     pub game_lua_code: String,
     pub auto_run: bool,
 }
@@ -34,11 +32,9 @@ struct CliArgs {
     game: String,
     #[arg(short, long, default_value_t = false)]
     auto_run: bool,
-    #[arg(short, long, default_value_t = 8)]
-    refresh_time: u8,
-    #[arg(short, long, default_value_t = 125)]
-    interval_tick: u8,
-    #[arg(short, long, default_value_t = 4)]
+    #[arg(short, long, default_value_t = 10 )]
+    refresh_rate: u8,
+    #[arg(long, default_value_t = 4)]
     tab_to_spaces: u8,
 }
 

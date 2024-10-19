@@ -7,7 +7,6 @@ use game_model::prelude::*;
 
 //  //  //  //  //  //  //  //
 pub struct AppModel {
-    pub(crate) start_time: std::time::SystemTime,
     pub(crate) tick_counter: u16,
     pub(crate) game_counter: i64,
     pub(crate) game_actions: Vec<char>,
@@ -31,7 +30,6 @@ pub enum AppModelState {
 impl AppModel {
     pub fn new(config: &crate::config::AppConfig) -> Result<Self> {
         let app = Self {
-            start_time: std::time::SystemTime::now(),
             tick_counter: 0,
             game_counter: 0,
             game_actions: Vec::new(),
