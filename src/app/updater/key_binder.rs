@@ -13,7 +13,7 @@ pub(super) fn translate_event(event: &xEvent::Event, is_popuped: bool, is_normal
                 // TODO: <C-CR> doesn't work
                 return Ok(Action::ApplyEditedCode(is_popuped));
             }
-            if key.code == xEvent::KeyCode::Char('d') {
+            if key.code == xEvent::KeyCode::Char('p') {
                 return Ok(Action::PopupLuaEditor);
             }
         }

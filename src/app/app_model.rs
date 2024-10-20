@@ -5,6 +5,8 @@ use raalog::{debug, error, info, trace, warn};
 
 use game_model::prelude::*;
 
+static START_COMMANDS: &str = "10j3k2l\n3h\n6j7l3k";
+
 //  //  //  //  //  //  //  //
 pub struct AppModel {
     pub(crate) tick_counter: u16,
@@ -36,7 +38,7 @@ impl AppModel {
             game: None,
             game_editor_state: edtui::EditorState::new(edtui::Lines::from(config.game_lua_code.as_str())),
             game_editor_handler: edtui::EditorEventHandler::default(),
-            command_editor_state: edtui::EditorState::new(edtui::Lines::from("0jjj3k\njkk")),
+            command_editor_state: edtui::EditorState::new(edtui::Lines::from(START_COMMANDS)),
             ed_handler: edtui::EditorEventHandler::default(),
             state: AppModelState::OffFocused,
             is_popup: false,

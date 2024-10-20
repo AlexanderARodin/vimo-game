@@ -10,8 +10,6 @@ mod command_string;
 mod key_binder;
 
 //  //  //  //  //  //  //  //
-//static TICK: std::time::Duration = std::time::Duration::from_millis(125);
-
 pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
     match act {
         Action::Tick => {
@@ -19,7 +17,7 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
             let mask = app.tick_counter & 3;
             if mask == 0 {
                 return Ok(Action::GameAction);
-            } 
+            }
             if mask == 1 {
                 app.game_counter += 1;
                 return Ok(Action::GameUpdate);
@@ -34,6 +32,8 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
         }
         Action::QueueCommand(cmds) => {
             app.game_actions = cmds.chars().collect();
+            app.game_counter = -2;
+            app.tick_counter = 0;
             Ok(Action::Noop)
         }
         Action::ApplyEditedCode(is_game_code) => {
@@ -56,12 +56,10 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
         }
         Action::HandleByEditor(ev) => {
             if app.is_popup {
-                app
-                    .game_editor_handler
+                app.game_editor_handler
                     .on_event(ev.clone(), &mut app.game_editor_state);
             } else {
-                app
-                    .ed_handler
+                app.ed_handler
                     .on_event(ev.clone(), &mut app.command_editor_state);
             }
             Ok(Action::Noop)
@@ -94,7 +92,12 @@ fn action_game(app: &mut AppModel) -> Result<Action> {
         'j' => GameCommand::Down,
         'h' => GameCommand::Left,
         'l' => GameCommand::Right,
-        _ => return Err(anyhow::anyhow!("Unexpected character <{}> in game_command", c)),
+        _ => {
+            return Err(anyhow::anyhow!(
+                "Unexpected character <{}> in game_command",
+                c
+            ))
+        }
     };
     if let Some(game) = &mut app.game {
         if let Err(e) = game.action(game_command) {
@@ -129,11 +132,10 @@ fn apply_command_code(app: &mut AppModel) -> Result<Action> {
     match command_string::convert(&src_command) {
         Ok(s) => Ok(Action::QueueCommand(s)),
         Err(e) => Ok(Action::Warning(format!(
-                "game commands has unexpected instruction(s).\n{}",
-                e
-            ))),
+            "game commands has unexpected instruction(s).\n{}",
+            e
+        ))),
     }
-
 }
 
 #[inline(always)]

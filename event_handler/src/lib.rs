@@ -72,17 +72,11 @@ fn check_terminate_sequence(event: &xEvent::Event) -> Option<Events> {
                     warn!("{}", msg);
                     return Some(Events::Exit);
                 }
-                // <C-/>
+                // TODO: doesn't work <C-/>
                 if key.code == xEvent::KeyCode::Char('/') {
                     let msg = "aborted by <C-/>";
                     error!("{}", msg);
                     panic!("{}", msg);
-                }
-                // <C-p>
-                if key.code == xEvent::KeyCode::Char('p') {
-                    let msg = "stress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\nstress test\n";
-                    warn!("{}", msg);
-                    return None;
                 }
             }
         }

@@ -19,7 +19,7 @@ pub fn view(app: &mut AppModel, area: Rect, buf: &mut Buffer) {
     let [top_area, game_area, command_area] =
         Layout::vertical([Length(4), Min(35), Min(4)]).areas(area);
 
-    TitleWidget().render(top_area, buf);
+    TitleWidget(&app.game_actions).render(top_area, buf);
 
     if let Some(game) = &app.game {
         PlaygroundWidget(Some(game)).render(game_area, buf);
@@ -37,12 +37,19 @@ pub fn view(app: &mut AppModel, area: Rect, buf: &mut Buffer) {
 }
 
 //  //  //  //  //  //  //  //
-struct TitleWidget();
-impl Widget for TitleWidget {
+struct TitleWidget<'a>(&'a Vec<char>);
+impl Widget for TitleWidget<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        Paragraph::new("main title here")
-            .block(Block::bordered().title("title of Main Title"))
-            .render(area, buf);
+        if self.0.is_empty() {
+            Paragraph::new("")
+                .block(Block::bordered().title("there is no action"))
+                .render(area, buf);
+        } else {
+            let text: String = self.0.into_iter().collect();
+            Paragraph::new(text)
+                .block(Block::bordered().title("ACTIONS in queue:"))
+                .render(area, buf);
+        }
     }
 }
 
