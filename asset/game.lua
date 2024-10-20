@@ -1,6 +1,5 @@
 print("game script started..")
 
-local player
 local target
 
 local static_obstacles = {}
@@ -14,7 +13,6 @@ local shifts = {
 }
 
 function reset()
-	player = {2,2}
 	target = {9,12}
 	static_obstacles = {
 		{0,0},
@@ -53,25 +51,8 @@ function update(time)
 	end
 
     return {
-        player = player,
         target = target,
 		obstacles = obstacles,
         GameOver,
     }
-end
-
-function action(ac)
-    -- print("act:", ac)
-    if ac == 1 then
-        player = { player[1], player[2] - 1 }
-    end
-    if ac == 2 then
-        player = { player[1], player[2] + 1 }
-    end
-    if ac == 3 then
-        player = { player[1] - 1, player[2] }
-    end
-    if ac == 4 then
-        player = { player[1] + 1, player[2] }
-    end
 end

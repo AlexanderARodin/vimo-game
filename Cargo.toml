@@ -15,7 +15,8 @@ clap = { version = "4.5.20", features = ["derive"] }
 ratatui = "0.28.1"
 edtui = "0.8.1"
 
-game_model_old = { path = "./game_model_old" }
+# game_model_old = { path = "./game_model_old" }
+game_model = { path = "./game_model" }
 event_handler = { path = "./event_handler" }
 
 

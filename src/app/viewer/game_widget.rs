@@ -9,7 +9,7 @@ use raalog::{debug, error, info, trace, warn};
 use ratatui::prelude::*;
 use ratatui::widgets::Block;
 
-use game_model_old::prelude::*;
+use game_model::prelude::*;
 
 //  //  //  //  //  //  //  //
 pub struct GameWidget<'a>(pub Option<&'a dyn GameModelInterface>);

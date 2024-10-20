@@ -4,7 +4,7 @@ use raalog::{debug, error, info, trace, warn};
 
 use super::action::Action;
 use super::app_model::{AppModel, AppModelState};
-use game_model_old::prelude::*;
+use game_model::prelude::*;
 
 mod command_string;
 mod key_binder;
@@ -82,7 +82,8 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
 //  //  //  //  //  //  //  //
 //  //  //  //  //  //  //  //
 #[inline(always)]
-fn action_game(app: &mut AppModel) -> Result<Action> {
+fn action_game(_app: &mut AppModel) -> Result<Action> {
+    /*
     if app.game_actions.is_empty() {
         return Ok(Action::Noop);
     }
@@ -108,13 +109,33 @@ fn action_game(app: &mut AppModel) -> Result<Action> {
             )));
         }
     }
+    */
     Ok(Action::Noop)
+}
+fn extract_game_command(app: &mut AppModel) -> Result<Option<GameCommand>> {
+    if app.game_actions.is_empty() {
+        return Ok(None);
+    }
+    let c = app.game_actions.remove(0);
+    match c {
+        'k' => return Ok(Some(GameCommand::Up)),
+        'j' => return Ok(Some(GameCommand::Down)),
+        'h' => return Ok(Some(GameCommand::Left)),
+        'l' => return Ok(Some(GameCommand::Right)),
+        _ => {
+            return Err(anyhow::anyhow!(
+                "Unexpected character <{}> in game_command",
+                c
+            ))
+        }
+    }
 }
 
 #[inline(always)]
 fn update_game(app: &mut AppModel) -> Result<Action> {
+    let game_command = extract_game_command(app)?;
     if let Some(game) = &mut app.game {
-        if let Err(e) = game.update(app.game_counter) {
+        if let Err(e) = game.update(app.game_counter, game_command) {
             app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted.\n{}",

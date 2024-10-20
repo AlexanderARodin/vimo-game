@@ -40,15 +40,44 @@ impl GameModelInterface for GameModel {
         &self.game_state
     }
 
-    fn update(&mut self, time: i64, _cmd: Option<GameCommand>) -> Result<()> {
-        if let GameState::GameOver(_) = self.game_state {
-            Ok(())
-        } else {
-            //todo!("apply ACTIONS!!"); // TODO: ACTIONS
-            let player: Option<(u16, u16)> = None;
-            self.game_state = self.invoke_lua_update(time, player)?;
-            Ok(())
+    fn update(&mut self, time: i64, opt_cmd: Option<GameCommand>) -> Result<()> {
+        if let Some(GameCommand::Reset) = opt_cmd {
+            self.game_state = GameState::Undef;
         }
+        if let GameState::GameOver(_) = self.game_state {
+            return Ok(());
+        }
+        let player: Option<(u16, u16)> = match &self.game_state {
+            GameState::Undef => Some((2, 2)),
+            GameState::Running(obj) => obj.player,
+            _ => None,
+        };
+        let new_player = move_player(player, opt_cmd);
+        self.game_state = self.invoke_lua_update(time, new_player)?;
+        Ok(())
+    }
+}
+
+// TODO: needs tests
+fn move_player(opt_player: Option<(u16, u16)>, opt_cmd: Option<GameCommand>) -> Option<(u16, u16)> {
+    let Some(player) = opt_player else {
+        return None;
+    };
+    match opt_cmd {
+        None => Some(player),
+        Some(GameCommand::Up) => {
+            Some((player.0, player.1 - 1))
+        }
+        Some(GameCommand::Down) => {
+            Some((player.0, player.1 + 1))
+        }
+        Some(GameCommand::Left) => {
+            Some((player.0 - 1, player.1))
+        }
+        Some(GameCommand::Right) => {
+            Some((player.0 + 1, player.1))
+        }
+        _ => None,
     }
 }
 

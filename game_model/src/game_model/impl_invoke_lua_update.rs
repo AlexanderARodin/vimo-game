@@ -11,17 +11,25 @@ use super::GameModel;
 impl GameModel {
     #[inline]
     pub(super) fn invoke_lua_update(
-        &mut self,
+        &self,
         time: i64,
         player: Option<(u16, u16)>,
     ) -> Result<GameState> {
         let update: mlua::Function = self.lua.globals().get("update")?;
-        let update_result: mlua::Table =
-            update.call::<_, mlua::Table>(mlua::Value::Integer(time))?;
+        let update_result: mlua::Table = match player {
+            None => {
+                update.call::<_, mlua::Table>(mlua::Value::Integer(time))?
+            }
+            Some(pl) => {
+                let pl_tbl = self.lua.create_table()?;
+                pl_tbl.set(1,pl.0)?;
+                pl_tbl.set(2,pl.1)?;
+                update.call::<_, mlua::Table>((mlua::Value::Integer(time), mlua::Value::Table(pl_tbl)))?
+            }
+        };
 
         if let Ok(s) = update_result.get::<&str, String>("GameOver") {
-            //self.game_state = GameState::GameOver(s.clone());
-            //return Ok(());
+            todo!("doesn't work");
             return Ok(GameState::GameOver(s.clone()));
         }
         {
@@ -31,8 +39,6 @@ impl GameModel {
                 obstacles: extract_list(&update_result, "obstacles"),
             };
 
-            //self.game_state = GameState::Running(objects);
-            //Ok(())
             return Ok(GameState::Running(objects));
         }
     }
@@ -95,7 +101,16 @@ mod game_model_tests {
     #[test]
     fn all_in() -> Result<()> {
         let code = r#"
-                        function update(time)
+                        function update(time, player)
+                            if player == nil then
+                                error("<player> is NIL")
+                            end
+                            if player[1] ~= 11 then
+                                error("<player> with wrong [1]")
+                            end
+                            if player[2] ~= 7 then
+                                error("<player> with wrong [2]")
+                            end
                         return {
                             obstacles = {
                                 {3,14},{4,15},
@@ -104,9 +119,9 @@ mod game_model_tests {
                         };
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, Some((11,7)))?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -132,9 +147,9 @@ mod game_model_tests {
                         };
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, None)?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -161,9 +176,9 @@ mod game_model_tests {
                         };
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, None)?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -187,9 +202,9 @@ mod game_model_tests {
                         };
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, None)?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -211,9 +226,9 @@ mod game_model_tests {
                         };
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, None)?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
@@ -232,9 +247,9 @@ mod game_model_tests {
                         return {};
                         end
                     "#;
-        let mut model = GameModel::new(code)?;
-        model.invoke_lua_update(-1, None)?;
-        match &model.game_state {
+        let model = GameModel::new(code)?;
+        let new_state = model.invoke_lua_update(-1, None)?;
+        match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
             GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
