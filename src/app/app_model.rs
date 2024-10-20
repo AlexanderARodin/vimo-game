@@ -3,7 +3,7 @@ use anyhow::Result;
 #[allow(unused_imports)]
 use raalog::{debug, error, info, trace, warn};
 
-use game_model::prelude::*;
+use game_model_old::prelude::*;
 
 static START_COMMANDS: &str = "10j3k2l\n3h\n6j7l3k";
 

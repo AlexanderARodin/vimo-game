@@ -4,7 +4,7 @@ use raalog::{debug, error, info, trace, warn};
 
 use super::action::Action;
 use super::app_model::{AppModel, AppModelState};
-use game_model::prelude::*;
+use game_model_old::prelude::*;
 
 mod command_string;
 mod key_binder;

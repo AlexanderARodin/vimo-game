@@ -1,0 +1,9 @@
+[package]
+name = "game_model_old"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+raalog.workspace = true
+mlua.workspace = true

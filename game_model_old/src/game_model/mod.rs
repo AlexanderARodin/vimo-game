@@ -8,7 +8,8 @@ use crate::prelude::*;
 
 //  //  //  //  //  //  //  //
 mod game_state;
-mod impl_invoke_lua_update;
+mod impl_action;
+mod impl_update;
 
 pub use game_state::*;
 
@@ -39,15 +40,19 @@ impl GameModelInterface for GameModel {
     fn state(&self) -> &GameState {
         &self.game_state
     }
-
-    fn update(&mut self, time: i64, _cmd: Option<GameCommand>) -> Result<()> {
+    fn update(&mut self, time: i64) -> Result<()> {
         if let GameState::GameOver(_) = self.game_state {
             Ok(())
         } else {
-            //todo!("apply ACTIONS!!"); // TODO: ACTIONS
-            let player: Option<(u16, u16)> = None;
-            self.game_state = self.invoke_lua_update(time, player)?;
+            self.internal_update(time)
+        }
+    }
+
+    fn action(&mut self, act: GameCommand) -> Result<()> {
+        if let GameState::GameOver(_) = self.game_state {
             Ok(())
+        } else {
+            self.internal_action(act)
         }
     }
 }
@@ -60,7 +65,7 @@ mod game_model_tests {
     use super::*;
 
     #[test]
-    fn new_state_is_undef() -> Result<()> {
+    fn new_undef_state() -> Result<()> {
         let code = "";
         let model = GameModel::new(code)?;
         assert!(model.game_state == GameState::Undef);
@@ -68,10 +73,10 @@ mod game_model_tests {
     }
 
     #[test]
-    fn there_is_no_update_error() -> Result<()> {
+    fn new_update_error() -> Result<()> {
         let code = "";
         let mut model = GameModel::new(code)?;
-        let r = model.update(-1, None);
+        let r = model.update(-1);
         assert!(r.is_err());
         Ok(())
     }

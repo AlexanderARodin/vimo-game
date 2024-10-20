@@ -17,7 +17,6 @@ impl GameModel {
 
         if let Ok(s) = update_result.get::<&str, String>("GameOver") {
             self.game_state = GameState::GameOver(s.clone());
-            //return Err(anyhow::anyhow!("GameOver <{}>", s));
             return Ok(());
         }
         {
