@@ -5,6 +5,7 @@ use super::app_model::AppModel;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph};
+use ratatui::widgets::Widget;
 use Constraint::*;
 
 mod game_widget;
