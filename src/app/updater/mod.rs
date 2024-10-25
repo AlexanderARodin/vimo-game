@@ -15,24 +15,21 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
         Action::Tick => {
             app.tick_counter += 1;
             let mask = app.tick_counter & 3;
-            if mask == 0 {
-                return Ok(Action::GameAction);
-            }
             if mask == 1 {
-                app.game_counter += 1;
+                app.game_time += 1;
                 return Ok(Action::GameUpdate);
             }
             return Ok(Action::Noop);
-        }
-        Action::GameAction => {
-            return action_game(app);
         }
         Action::GameUpdate => {
             return update_game(app);
         }
         Action::QueueCommand(cmds) => {
             app.game_actions = cmds.chars().collect();
-            app.game_counter = -2;
+            Ok(Action::ResetCounters)
+        }
+        Action::ResetCounters => {
+            app.game_time = -2;
             app.tick_counter = 0;
             Ok(Action::Noop)
         }
@@ -81,39 +78,11 @@ pub fn update(app: &mut AppModel, act: &Action) -> Result<Action> {
 
 //  //  //  //  //  //  //  //
 //  //  //  //  //  //  //  //
-#[inline(always)]
-fn action_game(_app: &mut AppModel) -> Result<Action> {
-    /*
-    if app.game_actions.is_empty() {
-        return Ok(Action::Noop);
-    }
-    let c = app.game_actions.remove(0);
-    let game_command = match c {
-        'k' => GameCommand::Up,
-        'j' => GameCommand::Down,
-        'h' => GameCommand::Left,
-        'l' => GameCommand::Right,
-        _ => {
-            return Err(anyhow::anyhow!(
-                "Unexpected character <{}> in game_command",
-                c
-            ))
-        }
-    };
-    if let Some(game) = &mut app.game {
-        if let Err(e) = game.action(game_command) {
-            app.game = None;
-            return Ok(Action::Warning(format!(
-                "Lua code has errors (see below). Game has been reseted.\n{}",
-                e
-            )));
-        }
-    }
-    */
-    Ok(Action::Noop)
-}
 fn extract_game_command(app: &mut AppModel) -> Result<Option<GameCommand>> {
     if app.game_actions.is_empty() {
+        return Ok(None);
+    }
+    if app.game_time < 0 {
         return Ok(None);
     }
     let c = app.game_actions.remove(0);
@@ -135,7 +104,7 @@ fn extract_game_command(app: &mut AppModel) -> Result<Option<GameCommand>> {
 fn update_game(app: &mut AppModel) -> Result<Action> {
     let game_command = extract_game_command(app)?;
     if let Some(game) = &mut app.game {
-        if let Err(e) = game.update(app.game_counter, game_command) {
+        if let Err(e) = game.update(app.game_time, game_command) {
             app.game = None;
             return Ok(Action::Warning(format!(
                 "Lua code has errors (see below). Game has been reseted.\n{}",
@@ -166,9 +135,8 @@ fn apply_game_code(app: &mut AppModel) -> Result<Action> {
     match GameModel::new(&code) {
         Ok(new_game) => {
             app.game = Some(new_game);
-            app.game_counter = -1;
             info!("Lua restarted with new code");
-            Ok(Action::GameUpdate)
+            Ok(Action::ResetCounters)
         }
         Err(e) => {
             app.game = None;

@@ -1,6 +1,8 @@
 #[allow(non_upper_case_globals)]
 static empty_bg: Color = Color::Rgb(8, 8, 8);
 #[allow(non_upper_case_globals)]
+static red_empty_bg: Color = Color::Rgb(64, 8, 8);
+#[allow(non_upper_case_globals)]
 static obstacle_bg: Color = Color::Rgb(64, 64, 64);
 
 #[allow(unused_imports)]
@@ -47,6 +49,11 @@ impl Widget for GameCellWG {
                 buf[center].set_char(' ').set_bg(empty_bg);
                 buf[left].set_char(' ').set_bg(empty_bg);
                 buf[right].set_char(' ').set_bg(empty_bg);
+            }
+            CellState::RedEmpty => {
+                buf[center].set_char(' ').set_bg(red_empty_bg);
+                buf[left].set_char('-').set_bg(red_empty_bg);
+                buf[right].set_char('-').set_bg(red_empty_bg);
             }
             CellState::Player => {
                 buf[center].set_char('*').set_bg(empty_bg).set_fg(Color::Green);

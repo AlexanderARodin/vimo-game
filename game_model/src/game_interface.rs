@@ -1,7 +1,6 @@
 use anyhow::Result;
 
 pub enum GameCommand {
-    Reset,
     Up,
     Down,
     Left,

@@ -7,8 +7,8 @@ pub enum Action {
     TranslateRawEvent(xEvent::Event),
     ApplyEditedCode(bool), // is GameCode?
     Tick,
+    ResetCounters,
     GameUpdate,
-    GameAction,
     HandleByEditor(xEvent::Event),
     PopupLuaEditor,
     QueueCommand(String),

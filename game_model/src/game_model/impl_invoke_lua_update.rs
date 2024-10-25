@@ -19,7 +19,13 @@ impl GameModel {
         let update_result = self.get_update_result(lua_update, time, player)?;
 
         if let Ok(s) = update_result.get::<&str, String>("GameOver") {
-            return Ok(GameState::GameOver(s.clone()));
+            if let GameState::Running(obj) = &self.game_state {
+                return Ok(GameState::GameOver(s.clone(), obj.clone()));
+            } else {
+                return Ok(GameState::GameOver(s.clone(), GameObjects {
+                    player: None, target: None, obstacles: Vec::new(),
+                }));
+            }
         }
 
         let objects = GameObjects {
@@ -118,7 +124,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Ok(()),
+            GameState::GameOver(_, _) => Ok(()),
             GameState::Running(_) => Err(anyhow::anyhow!("can't be GameState::Running()")),
         }
     }
@@ -148,7 +154,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, Some((11, 7)))?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.player == Some((11, 7)));
                 assert!(objs.target == Some((2, 6)));
@@ -176,7 +182,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
@@ -205,7 +211,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
@@ -231,7 +237,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.target.is_none());
                 assert!(objs.player.is_none());
@@ -255,7 +261,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.target == Some((13, 14)));
                 assert!(objs.player.is_none());
@@ -276,7 +282,7 @@ mod game_model_tests {
         let new_state = model.invoke_lua_update(-1, None)?;
         match new_state {
             GameState::Undef => Err(anyhow::anyhow!("can't be GameState::Undef")),
-            GameState::GameOver(_) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
+            GameState::GameOver(_, _) => Err(anyhow::anyhow!("can't be GameState::GameOver()")),
             GameState::Running(objs) => {
                 assert!(objs.player.is_none());
                 assert!(objs.target.is_none());

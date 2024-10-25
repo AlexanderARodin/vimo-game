@@ -10,7 +10,7 @@ static START_COMMANDS: &str = "10j3k2l\n3h\n6j7l3k";
 //  //  //  //  //  //  //  //
 pub struct AppModel {
     pub(crate) tick_counter: u16,
-    pub(crate) game_counter: i64,
+    pub(crate) game_time: i64,
     pub(crate) game_actions: Vec<char>,
     pub(super) game: Option<GameModel>,
     pub(super) game_editor_state: edtui::EditorState,
@@ -33,7 +33,7 @@ impl AppModel {
     pub fn new(config: &crate::config::AppConfig) -> Result<Self> {
         let app = Self {
             tick_counter: 0,
-            game_counter: 0,
+            game_time: 0,
             game_actions: Vec::new(),
             game: None,
             game_editor_state: edtui::EditorState::new(edtui::Lines::from(config.game_lua_code.as_str())),

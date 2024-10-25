@@ -9,6 +9,7 @@ use crate::prelude::*;
 //  //  //  //  //  //  //  //
 mod game_state;
 mod impl_invoke_lua_update;
+mod move_player;
 
 pub use game_state::*;
 
@@ -41,33 +42,33 @@ impl GameModelInterface for GameModel {
     }
 
     fn update(&mut self, time: i64, opt_cmd: Option<GameCommand>) -> Result<()> {
-        if let Some(GameCommand::Reset) = opt_cmd {
-            self.game_state = GameState::Undef;
+        match (&self.game_state, time) {
+            (_, -1) => {
+                let new_player = self.lua_read_player()?;
+                self.game_state = self.invoke_lua_update(time, new_player)?;
+                Ok(())
+            }
+            (GameState::Undef, _) => Err(anyhow::anyhow!("The first time stamp in Undef state must be <-1>")),
+            (GameState::GameOver(_, _), _) => Ok(()),
+            (GameState::Running(objs), _) => {
+                let new_player = move_player::move_player(objs.player, opt_cmd);
+                self.game_state = self.invoke_lua_update(time, new_player)?;
+                Ok(())
+            }
         }
-        if let GameState::GameOver(_) = self.game_state {
-            return Ok(());
-        }
-        let player: Option<(u16, u16)> = match &self.game_state {
-            GameState::Undef => Some((2, 2)),
-            GameState::Running(obj) => obj.player,
-            _ => None,
-        };
-        let new_player = move_player(player, opt_cmd);
-        self.game_state = self.invoke_lua_update(time, new_player)?;
-        Ok(())
     }
 }
 
-fn move_player(opt_player: Option<(u16, u16)>, opt_cmd: Option<GameCommand>) -> Option<(u16, u16)> {
-    match (opt_player, opt_cmd) {
-        (Some(player), Some(command)) => match command {
-            GameCommand::Up => Some((player.0, 0b1111 & player.1.overflowing_sub(1).0)),
-            GameCommand::Down => Some((player.0, 0b1111 & (player.1 + 1))),
-            GameCommand::Left => Some((0b1111 & player.0.overflowing_sub(1).0, player.1)),
-            GameCommand::Right => Some((0b1111 & (player.0 + 1), player.1)),
-            GameCommand::Reset => opt_player,
-        },
-        (_, None) | (None, _) => opt_player,
+impl GameModel {
+    fn lua_read_player(&self) -> Result<Option<(u16,u16)>> {
+        let lua_new_player: mlua::Table= self.lua.globals().get("new_player")?;
+        let Ok(x) = lua_new_player.get::<u16, u16>(1) else {
+            return Ok(None);
+        };
+        let Ok(y) = lua_new_player.get::<u16, u16>(2) else {
+            return Ok(None);
+        };
+        Ok(Some((x, y)))
     }
 }
 
@@ -75,46 +76,56 @@ fn move_player(opt_player: Option<(u16, u16)>, opt_cmd: Option<GameCommand>) -> 
 //        TEST              //
 //  //  //  //  //  //  //  //
 #[cfg(test)]
-mod move_player_tests {
-    use super::*;
-
-    #[test]
-    fn no_moves() -> Result<()> {
-        assert!(None == move_player(None, None));
-        assert!(None == move_player(None, Some(GameCommand::Reset)));
-        assert!(Some((2, 2)) == move_player(Some((2, 2)), None));
-        assert!(Some((2, 2)) == move_player(Some((2, 2)), Some(GameCommand::Reset)));
-        Ok(())
-    }
-
-    #[test]
-    fn basic_moves() -> Result<()> {
-        assert!(Some((2, 1)) == move_player(Some((2, 2)), Some(GameCommand::Up)));
-        assert!(Some((2, 3)) == move_player(Some((2, 2)), Some(GameCommand::Down)));
-        assert!(Some((1, 2)) == move_player(Some((2, 2)), Some(GameCommand::Left)));
-        assert!(Some((3, 2)) == move_player(Some((2, 2)), Some(GameCommand::Right)));
-        Ok(())
-    }
-
-    #[test]
-    fn edge_moves() -> Result<()> {
-        assert!(Some((0, 15)) == move_player(Some((0, 0)), Some(GameCommand::Up)));
-        assert!(Some((0, 0)) == move_player(Some((0, 15)), Some(GameCommand::Down)));
-        assert!(Some((15, 0)) == move_player(Some((0, 0)), Some(GameCommand::Left)));
-        assert!(Some((0, 0)) == move_player(Some((15, 0)), Some(GameCommand::Right)));
-        Ok(())
-    }
-}
-
-#[cfg(test)]
 mod game_model_tests {
     use super::*;
+
+    #[test]
+    fn new_player_position() -> Result<()> {
+        let code = r#"
+                        new_player = {7,4}
+                        function update(time)
+                            return {}
+                        end
+                    "#;
+        let mut model = GameModel::new(code)?;
+        assert!(model.game_state == GameState::Undef);
+        model.update(-1, None)?;
+        let GameState::Running(objs) = &model.game_state else {
+            return Err(anyhow::anyhow!("game_state is not Running(_)"));
+        };
+        let Some(player) = objs.player else {
+            return Err(anyhow::anyhow!("game_state.player is None"));
+        };
+        assert!(player == (7,4));
+        Ok(())
+    }
+
+    #[test]
+    fn there_is_no_new_player_error() -> Result<()> {
+        let code = r#"
+                        new_player = nil
+                    "#;
+        let mut model = GameModel::new(code)?;
+        assert!(model.game_state == GameState::Undef);
+        let r = model.update(-1, None);
+        assert!(r.is_err());
+        Ok(())
+    }
 
     #[test]
     fn new_state_is_undef() -> Result<()> {
         let code = "";
         let model = GameModel::new(code)?;
         assert!(model.game_state == GameState::Undef);
+        Ok(())
+    }
+
+    #[test]
+    fn undef_with_incorrect_time_error() -> Result<()> {
+        let code = "";
+        let mut model = GameModel::new(code)?;
+        let r = model.update(0, None);
+        assert!(r.is_err());
         Ok(())
     }
 
