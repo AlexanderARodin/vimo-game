@@ -1,5 +1,7 @@
 print("game script started..")
 
+new_player = {3,3}
+
 local target
 
 local static_obstacles = {}
